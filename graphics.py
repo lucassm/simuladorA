@@ -25,6 +25,7 @@ class Edge(QtGui.QGraphicsLineItem):
         line = QtCore.QLineF(self.w1.pos(), self.w2.pos())
         self.setLine(line)
         self.setZValue(-1)
+        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
     
     def updatePosition(self):
         '''
@@ -89,6 +90,19 @@ class Edge(QtGui.QGraphicsLineItem):
                        )
         painter.setBrush(QtCore.Qt.black)
         painter.drawLine(self.line())
+        
+        if self.isSelected():
+            painter.setPen(QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.DashLine))
+            myLine = QtCore.QLineF(line)
+            myLine.translate(0, 4.0)
+            painter.drawLine(myLine)
+            myLine.translate(0,-8.0)
+            painter.drawLine(myLine)
+        
+        def mousePressEvent(self, mouseEvent):
+            self.setSelected(True)
+            super(Edge, self).mousePressEvent(mouseEvent)
+            return
 
 
 class Text(QtGui.QGraphicsTextItem):
@@ -193,6 +207,13 @@ class Node(QtGui.QGraphicsRectItem):
         
         painter.drawRect(self.rect)
         
+        if self.isSelected():
+            painter.setPen(QtGui.QPen(QtCore.Qt.red, 1, QtCore.Qt.DashLine))
+            painter.setBrush(QtCore.Qt.NoBrush)
+            adjust = 2
+            rect = self.rect.adjusted(-adjust, -adjust, adjust, adjust)
+            painter.drawRect(rect)
+        
     def itemChange(self, change, value):
         '''
             Metodo que detecta mudancas na posicao do objeto node
@@ -201,6 +222,11 @@ class Node(QtGui.QGraphicsRectItem):
             for edge in self.edges:
                 edge.updatePosition()
         return QtGui.QGraphicsItem.itemChange(self, change, value)
+    
+    def mousePressEvent(self, mouseEvent):
+        self.setSelected(True)
+        super(Node, self).mousePressEvent(mouseEvent)
+        return 
         
 class SceneWidget(QtGui.QGraphicsScene):
     '''
