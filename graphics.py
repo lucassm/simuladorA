@@ -118,8 +118,15 @@ class Text(QtGui.QGraphicsTextItem):
         Classe que implementa o objeto Text Generico
     '''
     
-    def __init__(self):
-        pass
+    def __init__(self, text, parent=None, scene=None):
+        
+        super(Text, self).__init__(text, parent, scene)
+        #self.setParentItem(parent)
+    
+    def mouseDoubleClickEvent(self, event):
+        if self.textInteractionFlags() == QtCore.Qt.NoTextInteraction:
+            self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
+        super(Text, self).mouseDoubleClickEvent(event)
 
 class Node(QtGui.QGraphicsRectItem):
     '''
@@ -145,15 +152,27 @@ class Node(QtGui.QGraphicsRectItem):
         # caso o item a ser inserido seja do tipo subestacao
         if self.nodeType == self.Subestacao:
             self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            # definine e ajusta a posicao do label do item grafico
+            self.text = Text('Subestacao', self, self.scene())
+            self.text.setPos(self.mapFromItem(self.text, 0, 50))
         # caso o item a ser inserido seja do tipo religador
         elif self.nodeType == self.Religador:
             self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            # definine e ajusta a posicao do label do item grafico
+            self.text = Text('Religador', self, self.scene())
+            self.text.setPos(self.mapFromItem(self.text, 0, 50))
         # caso o item a ser inserido seja do tipo barra
         elif self.nodeType == self.Barra:
             self.rect = QtCore.QRectF(0, 0, 10.0, 100.0)
+            # definine e ajusta a posicao do label do item grafico
+            self.text = Text('Barra', self, self.scene())
+            self.text.setPos(self.mapFromItem(self.text, 0, 100))
         # caso o item a ser inserido seja do tipo agent
         elif self.nodeType == self.Agent:
             self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            # definine e ajusta a posicao do label do item grafico
+            self.text = Text('Agente', self, self.scene())
+            self.text.setPos(self.mapFromItem(self.text, 0, 50))
         
         self.setRect(self.rect)
         

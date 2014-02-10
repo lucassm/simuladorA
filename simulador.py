@@ -209,10 +209,8 @@ class Ui_MainWindow(object):
         
         if self.buttonGroup.button(id).isChecked():
             state = 'COMP 1'
-            print state
         else:
             state = 'COMP 2'
-            print state
         
         buttons = self.buttonGroup.buttons()
         for button in buttons:
