@@ -177,8 +177,8 @@ class Node(QtGui.QGraphicsRectItem):
             Metodo de remocao de todos bjetos edge associados ao objeto node
         '''
         for edge in self.edges[:]:
-            edge.startItem().removeEdge(edge)
-            edge.endItem().removeEdge(edge)
+            edge.w1.removeEdge(edge)
+            edge.w2.removeEdge(edge)
             self.scene().removeItem(edge)
  
     def addEdge(self, edge):
@@ -382,12 +382,20 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.myMode = mode
     
     def createActions(self):
-        self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut='Delete')
+        self.propertysAction = QtGui.QAction('Propriedades', self, shortcut = 'Enter')
+        self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut='Delete', triggered = self.deleteItem)
     
     def createMenus(self):
         self.myItemMenu = QtGui.QMenu('Menu Item')
+        self.myItemMenu.addAction(self.propertysAction)
         self.myItemMenu.addAction(self.deleteAction)
-
+    
+    def deleteItem(self):
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                item.removeEdges()
+            self.removeItem(item)
+    
             
 class ViewWidget(QtGui.QGraphicsView):
     '''

@@ -197,25 +197,39 @@ class Ui_MainWindow(object):
             Callback chamada no momento em que um item e iserido
             no diagrama grafico
         '''
-        self.buttonGroup.button(itemType).setChecked(False)
-        self.sceneWidget.setMode(self.sceneWidget.MoveItem)
+        #self.buttonGroup.button(itemType).setChecked(False)
+        #self.sceneWidget.setMode(self.sceneWidget.MoveItem)
+        pass
     
     def buttonGroupClicked(self, id):
         '''
             Callback chamada no momento em que um botao de insersao
             de itens e pressionado 
         '''
-        print id
+        
+        if self.buttonGroup.button(id).isChecked():
+            state = 'COMP 1'
+            print state
+        else:
+            state = 'COMP 2'
+            print state
+        
         buttons = self.buttonGroup.buttons()
         for button in buttons:
-            if self.buttonGroup.button(id) != button:
+            if state == 'COMP 1':
+                if self.buttonGroup.button(id) != button:
+                    button.setChecked(False)
+            elif state == 'COMP 2':
                 button.setChecked(False)
         
-        if id == 3:
-            self.sceneWidget.setMode(SceneWidget.InsertLine)
-        else:
-            self.sceneWidget.setItemType(id)
-            self.sceneWidget.setMode(SceneWidget.InsertItem)
+        if state == 'COMP 1':
+            if id == 3:
+                self.sceneWidget.setMode(SceneWidget.InsertLine)
+            else:
+                self.sceneWidget.setItemType(id)
+                self.sceneWidget.setMode(SceneWidget.InsertItem)
+        elif state == 'COMP 2':
+            self.sceneWidget.setMode(SceneWidget.MoveItem)
         
 
     def retranslateUi(self, MainWindow):
