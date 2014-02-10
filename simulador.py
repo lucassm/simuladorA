@@ -15,6 +15,11 @@ class Ui_MainWindow(object):
         Esta classe implementa a inteface grafica do simulador
     '''
     
+    def __init__(self):
+        pass
+        #self.createActions()
+        #self.createMenus()
+    
     def setupUi(self, MainWindow):
         '''
             Este metodo implementa os componentes da inteface grafica
@@ -211,6 +216,7 @@ class Ui_MainWindow(object):
         else:
             self.sceneWidget.setItemType(id)
             self.sceneWidget.setMode(SceneWidget.InsertItem)
+        
 
     def retranslateUi(self, MainWindow):
         

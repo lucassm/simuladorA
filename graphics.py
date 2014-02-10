@@ -9,7 +9,7 @@ class Edge(QtGui.QGraphicsLineItem):
     '''
         Classe que implementa o objeto Edge que liga dois objetos Node um ao outro
     '''
-    def __init__(self, w1, w2, parent=None, scene=None):
+    def __init__(self, w1, w2, edgeMenu, parent=None, scene=None):
         '''
             Metodo inicial da classe Edge
             Recebe como parâmetros os objetos Node Inicial e Final
@@ -21,6 +21,8 @@ class Edge(QtGui.QGraphicsLineItem):
         self.w1.addEdge(self) # adiciona o objeto Edge a lista de Edges do objeto w1
         self.w2 = w2
         self.w2.addEdge(self) # adiciona o objeto Edge a lista de Edges do objeto w2
+        
+        self.myEdgeMenu = edgeMenu
         
         line = QtCore.QLineF(self.w1.pos(), self.w2.pos())
         self.setLine(line)
@@ -99,10 +101,16 @@ class Edge(QtGui.QGraphicsLineItem):
             myLine.translate(0,-8.0)
             painter.drawLine(myLine)
         
-        def mousePressEvent(self, mouseEvent):
-            self.setSelected(True)
-            super(Edge, self).mousePressEvent(mouseEvent)
-            return
+    def mousePressEvent(self, mouseEvent):
+        self.setSelected(True)
+        super(Edge, self).mousePressEvent(mouseEvent)
+        return
+        
+    def contextMenuEvent(self, event):
+        self.scene().clearSelection()
+        self.setSelected(True)
+        self.myEdgeMenu.exec_(event.screenPos())
+            
 
 
 class Text(QtGui.QGraphicsTextItem):
@@ -146,8 +154,11 @@ class Node(QtGui.QGraphicsRectItem):
         # caso o item a ser inserido seja do tipo agent
         elif self.nodeType == self.Agent:
             self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
-            
+        
         self.setRect(self.rect)
+        
+        self.myNodeMenu = nodeMenu
+        
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
         self.setZValue(0)
@@ -192,20 +203,22 @@ class Node(QtGui.QGraphicsRectItem):
         if self.nodeType == self.Subestacao:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
+            painter.drawEllipse(self.rect)
         # caso o item a ser inserido seja do tipo religador
         elif self.nodeType == self.Religador:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
+            painter.drawRect(self.rect)
         # caso o item a ser inserido seja do tipo barra
         elif self.nodeType == self.Barra:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.black)
+            painter.drawRect(self.rect)
         # caso o item a ser inserido seja do tipo agent
         elif self.nodeType == self.Agent:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
-        
-        painter.drawRect(self.rect)
+            painter.drawRect(self.rect)
         
         if self.isSelected():
             painter.setPen(QtGui.QPen(QtCore.Qt.red, 1, QtCore.Qt.DashLine))
@@ -227,6 +240,11 @@ class Node(QtGui.QGraphicsRectItem):
         self.setSelected(True)
         super(Node, self).mousePressEvent(mouseEvent)
         return 
+    
+    def contextMenuEvent(self, event):
+            self.scene().clearSelection()
+            self.setSelected(True)
+            self.myNodeMenu.exec_(event.screenPos())
         
 class SceneWidget(QtGui.QGraphicsScene):
     '''
@@ -248,8 +266,12 @@ class SceneWidget(QtGui.QGraphicsScene):
         
         self.myMode = self.MoveItem
         self.myItemType = Node.Subestacao
+        
         self.line = None
         self.textItem = None
+        
+        self.createActions()
+        self.createMenus()
 
     def mousePressEvent(self, mouseEvent):
         '''
@@ -262,7 +284,7 @@ class SceneWidget(QtGui.QGraphicsScene):
 
         if self.myMode == self.InsertItem:
             
-            item = Node(self.myItemType, None)
+            item = Node(self.myItemType, self.myItemMenu)
             self.addItem(item)
             item.setPos(mouseEvent.scenePos())
             self.itemInserted.emit(self.myItemType)
@@ -331,7 +353,7 @@ class SceneWidget(QtGui.QGraphicsScene):
                     startItems[0] != endItems[0]:
                 startItem = startItems[0]
                 endItem = endItems[0]
-                edge = Edge(startItem, endItem)
+                edge = Edge(startItem, endItem, self.myItemMenu)
                 edge.setColor(QtCore.Qt.black)
                 startItem.addEdge(edge)
                 endItem.addEdge(edge)
@@ -358,6 +380,13 @@ class SceneWidget(QtGui.QGraphicsScene):
             Define em qual modo 
         '''
         self.myMode = mode
+    
+    def createActions(self):
+        self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut='Delete')
+    
+    def createMenus(self):
+        self.myItemMenu = QtGui.QMenu('Menu Item')
+        self.myItemMenu.addAction(self.deleteAction)
 
             
 class ViewWidget(QtGui.QGraphicsView):
