@@ -179,6 +179,8 @@ class Ui_MainWindow(object):
         
         
         # configura os botoes da barra de ferramentas
+        
+        # cria e configura acao de sair do programa
         self.actionExit = QtGui.QAction(MainWindow)
         
         icon = QtGui.QIcon()
@@ -186,6 +188,16 @@ class Ui_MainWindow(object):
         self.actionExit.setIcon(icon)
         self.actionExit.setObjectName("actionExit")
         self.toolBar.addAction(self.actionExit)
+        
+        # cria e configura acao de inserir ou retirar grade no diagrama grafico
+        self.actionGrid = QtGui.QAction(MainWindow)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionGrid.setIcon(icon)
+        self.actionGrid.setObjectName("actionGrid")
+        self.toolBar.addAction(self.actionGrid)
+
         
         # configuracoes adicionais
         self.retranslateUi(MainWindow)
@@ -256,11 +268,17 @@ class Ui_MainWindow(object):
         
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), QtGui.QApplication.translate("MainWindow", "Pagina 2", None, QtGui.QApplication.UnicodeUTF8))
         
-        self.actionExit.setText(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionExit.setText(QtGui.QApplication.translate("MainWindow", "Sair", None, QtGui.QApplication.UnicodeUTF8))
         
-        self.actionExit.setToolTip(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionExit.setToolTip(QtGui.QApplication.translate("MainWindow", "Sair", None, QtGui.QApplication.UnicodeUTF8))
         
         self.actionExit.setShortcut(QtGui.QApplication.translate("MainWindow", "4, Backspace", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionGrid.setText(QtGui.QApplication.translate("MainWindow", "Grade", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionGrid.setToolTip(QtGui.QApplication.translate("MainWindow", "Grade", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionGrid.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, g", None, QtGui.QApplication.UnicodeUTF8))
 
 
 class ControlMainWindow(QtGui.QMainWindow):

@@ -4,6 +4,7 @@
 from PySide import QtCore, QtGui
 import math
 import sys
+from DialogReligador import DialogReligador
 
 class Edge(QtGui.QGraphicsLineItem):
     '''
@@ -75,9 +76,9 @@ class Edge(QtGui.QGraphicsLineItem):
         w1 = self.w1
         w2 = self.w2
         
-        line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect.center()) , self.mapFromItem(self.w2, self.w2.rect.center()))
+        line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
         
-        p1 = w2.rect.topLeft() + w1.pos()
+        p1 = w2.rect().topLeft() + w1.pos()
         
         intersectPoint = QtCore.QPointF()
         
@@ -121,7 +122,8 @@ class Text(QtGui.QGraphicsTextItem):
     def __init__(self, text, parent=None, scene=None):
         
         super(Text, self).__init__(text, parent, scene)
-        #self.setParentItem(parent)
+        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
     
     def mouseDoubleClickEvent(self, event):
         if self.textInteractionFlags() == QtCore.Qt.NoTextInteraction:
@@ -151,35 +153,36 @@ class Node(QtGui.QGraphicsRectItem):
         
         # caso o item a ser inserido seja do tipo subestacao
         if self.nodeType == self.Subestacao:
-            self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            rect = QtCore.QRectF(0, 0, 50.0, 50.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Subestacao', self, self.scene())
-            self.text.setPos(self.mapFromItem(self.text, 0, 50))
+            self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo religador
         elif self.nodeType == self.Religador:
-            self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            rect = QtCore.QRectF(0, 0, 50.0, 50.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Religador', self, self.scene())
-            self.text.setPos(self.mapFromItem(self.text, 0, 50))
+            self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo barra
         elif self.nodeType == self.Barra:
-            self.rect = QtCore.QRectF(0, 0, 10.0, 100.0)
+            rect = QtCore.QRectF(0, 0, 10.0, 100.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Barra', self, self.scene())
-            self.text.setPos(self.mapFromItem(self.text, 0, 100))
+            self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo agent
         elif self.nodeType == self.Agent:
-            self.rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            rect = QtCore.QRectF(0, 0, 50.0, 50.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Agente', self, self.scene())
-            self.text.setPos(self.mapFromItem(self.text, 0, 50))
+            self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         
-        self.setRect(self.rect)
+        self.setRect(rect)
         
         self.myNodeMenu = nodeMenu
         
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
         self.setZValue(0)
     
     def removeEdge(self, edge):
@@ -211,41 +214,43 @@ class Node(QtGui.QGraphicsRectItem):
             Metodo que especifica a borda do objeto node
         '''
         extra = 5.0
-        return self.rect.adjusted(-extra, -extra, extra, extra)
+        return self.rect().adjusted(-extra, -extra, extra, extra)
         
     def paint(self, painter, option, widget):
         '''
             Metodo de desenho do objeto node implementado pela classe Node
         '''
         
+        self.text.setPos(0, self.rect().height())
+        
         # caso o item a ser inserido seja do tipo subestacao
         if self.nodeType == self.Subestacao:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
-            painter.drawEllipse(self.rect)
+            painter.drawEllipse(self.rect())
         # caso o item a ser inserido seja do tipo religador
         elif self.nodeType == self.Religador:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
-            painter.drawRect(self.rect)
+            painter.drawRect(self.rect())
         # caso o item a ser inserido seja do tipo barra
         elif self.nodeType == self.Barra:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.black)
-            painter.drawRect(self.rect)
+            painter.drawRect(self.rect())
         # caso o item a ser inserido seja do tipo agent
         elif self.nodeType == self.Agent:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
-            painter.drawRect(self.rect)
+            painter.drawRect(self.rect())
         
-        if self.isSelected():
-            painter.setPen(QtGui.QPen(QtCore.Qt.red, 1, QtCore.Qt.DashLine))
+        if self.isSelected():                
+            painter.setPen(QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.DashLine))
             painter.setBrush(QtCore.Qt.NoBrush)
             adjust = 2
-            rect = self.rect.adjusted(-adjust, -adjust, adjust, adjust)
-            painter.drawRect(rect)
-        
+            rect = self.rect().adjusted(-adjust, -adjust, adjust, adjust)
+            painter.drawRect(rect)              
+                    
     def itemChange(self, change, value):
         '''
             Metodo que detecta mudancas na posicao do objeto node
@@ -283,6 +288,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         
         self.setSceneRect(0, 0, 800, 800)
         
+        #self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
+        
         self.myMode = self.MoveItem
         self.myItemType = Node.Subestacao
         
@@ -303,7 +310,13 @@ class SceneWidget(QtGui.QGraphicsScene):
 
         if self.myMode == self.InsertItem:
             
-            item = Node(self.myItemType, self.myItemMenu)
+            if self.myItemType == Node.Religador:
+                item = Node(self.myItemType, self.myRecloserMenu)
+            elif self.myItemType == Node.Barra:
+                item = Node(self.myItemType, self.myBusMenu)
+            elif self.myItemType == Node.Subestacao:
+                item = Node(self.myItemType, self.mySubstationMenu)
+            
             self.addItem(item)
             item.setPos(mouseEvent.scenePos())
             self.itemInserted.emit(self.myItemType)
@@ -372,7 +385,7 @@ class SceneWidget(QtGui.QGraphicsScene):
                     startItems[0] != endItems[0]:
                 startItem = startItems[0]
                 endItem = endItems[0]
-                edge = Edge(startItem, endItem, self.myItemMenu)
+                edge = Edge(startItem, endItem, self.myLineMenu)
                 edge.setColor(QtCore.Qt.black)
                 startItem.addEdge(edge)
                 endItem.addEdge(edge)
@@ -401,19 +414,52 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.myMode = mode
     
     def createActions(self):
-        self.propertysAction = QtGui.QAction('Propriedades', self, shortcut = 'Enter')
-        self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut='Delete', triggered = self.deleteItem)
+        self.propertysAction = QtGui.QAction('Propriedades', self, shortcut = 'Enter', triggered = self.launchDialog)
+        self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut = 'Delete', triggered = self.deleteItem)
+        self.increaseBusAction = QtGui.QAction('Aumentar Barra', self, shortcut = 'Ctrl + a',triggered = self.increaseBus)
+        self.decreaseBusAction = QtGui.QAction('Diminuir Barra', self, shortcut = 'Ctrl + d', triggered = self.decreaseBus)
     
     def createMenus(self):
-        self.myItemMenu = QtGui.QMenu('Menu Item')
-        self.myItemMenu.addAction(self.propertysAction)
-        self.myItemMenu.addAction(self.deleteAction)
+        self.myBusMenu = QtGui.QMenu('Menu Bus')
+        self.myBusMenu.addAction(self.increaseBusAction)
+        self.myBusMenu.addAction(self.decreaseBusAction)
+        self.myBusMenu.addAction(self.deleteAction)
+        self.myBusMenu.addAction(self.propertysAction)
+        
+        self.myRecloserMenu = QtGui.QMenu('Menu Recloser')
+        self.myRecloserMenu.addAction(self.propertysAction)
+        self.myRecloserMenu.addAction(self.deleteAction)
+        
+        self.mySubstationMenu = QtGui.QMenu('Menu Subestacao')
+        self.mySubstationMenu.addAction(self.propertysAction)
+        self.mySubstationMenu.addAction(self.deleteAction)
+        
+        self.myLineMenu = QtGui.QMenu('Menu Linha')
+        self.myLineMenu.addAction(self.propertysAction)
+        self.myLineMenu.addAction(self.deleteAction)
     
     def deleteItem(self):
         for item in self.selectedItems():
             if isinstance(item, Node):
                 item.removeEdges()
             self.removeItem(item)
+    
+    def launchDialog(self):
+        dialog = DialogReligador()
+    
+    def increaseBus(self, ):
+        
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                item.prepareGeometryChange()
+                item.setRect(item.rect().x(), item.rect().y(), item.rect().width(), item.rect().height()*1.25)
+    
+    def decreaseBus(self):
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                item.prepareGeometryChange()
+                item.setRect(item.rect().x(), item.rect().y(), item.rect().width(), item.rect().height()*0.75)
+        
     
             
 class ViewWidget(QtGui.QGraphicsView):
