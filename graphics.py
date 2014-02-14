@@ -126,6 +126,10 @@ class Text(QtGui.QGraphicsTextItem):
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
     
     def mouseDoubleClickEvent(self, event):
+        '''
+            Metodo que trata o evento de duplo click no item grafico texto
+            para edicao de seu conteudo
+        '''
         if self.textInteractionFlags() == QtCore.Qt.NoTextInteraction:
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
         super(Text, self).mouseDoubleClickEvent(event)
@@ -177,7 +181,7 @@ class Node(QtGui.QGraphicsRectItem):
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         
         self.setRect(rect)
-        
+        self.alignLine = None
         self.myNodeMenu = nodeMenu
         
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
@@ -263,12 +267,41 @@ class Node(QtGui.QGraphicsRectItem):
     def mousePressEvent(self, mouseEvent):
         self.setSelected(True)
         super(Node, self).mousePressEvent(mouseEvent)
-        return 
+        return
     
     def contextMenuEvent(self, event):
             self.scene().clearSelection()
             self.setSelected(True)
             self.myNodeMenu.exec_(event.screenPos())
+            
+    def mouseMoveEvent(self, mouseEvent):
+        for item in self.scene().items():
+            if item != self and isinstance(item, Node):
+                if abs(item.x() - self.x()) <= 1.0:
+                    self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
+                    self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                    self.scene().addItem(self.alignLine)
+                
+                if abs(item.y() - self.y()) <= 1.0:
+                    self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
+                    self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                    self.scene().addItem(self.alignLine)
+                    
+            elif self.alignLine != None:
+                self.scene().removeItem(self.alignLine)
+                self.alignLine = None
+                    
+        super(Node, self).mouseMoveEvent(mouseEvent)
+        return
+    
+    def mouseReleaseEvent(self, mouseEvent):
+        
+        if self.alignLine != None:
+            self.scene().removeItem(self.alignLine)
+            self.alignLine = None
+            
+        super(Node, self).mouseReleaseEvent(mouseEvent)
+        return
         
 class SceneWidget(QtGui.QGraphicsScene):
     '''
@@ -414,12 +447,18 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.myMode = mode
     
     def createActions(self):
+        '''
+            Este metodo cria as ações que serão utilizadas nos menus dos itens graficos
+        '''
         self.propertysAction = QtGui.QAction('Propriedades', self, shortcut = 'Enter', triggered = self.launchDialog)
         self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut = 'Delete', triggered = self.deleteItem)
         self.increaseBusAction = QtGui.QAction('Aumentar Barra', self, shortcut = 'Ctrl + a',triggered = self.increaseBus)
         self.decreaseBusAction = QtGui.QAction('Diminuir Barra', self, shortcut = 'Ctrl + d', triggered = self.decreaseBus)
     
     def createMenus(self):
+        '''
+            Este metodo cria os menus de cada um dos itens graficos: religador, subestacao, barra e linha
+        '''
         self.myBusMenu = QtGui.QMenu('Menu Bus')
         self.myBusMenu.addAction(self.increaseBusAction)
         self.myBusMenu.addAction(self.decreaseBusAction)
@@ -439,22 +478,33 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.myLineMenu.addAction(self.deleteAction)
     
     def deleteItem(self):
+        '''
+            Este metodo implementa a acao de exclusão de um item grafico do diagrama
+        '''
         for item in self.selectedItems():
             if isinstance(item, Node):
                 item.removeEdges()
             self.removeItem(item)
     
     def launchDialog(self):
+        '''
+            Este metodo inicia os dialogos de configuracao de cada um dos itens graficos do diagrama
+        '''
         dialog = DialogReligador()
     
     def increaseBus(self, ):
-        
+        '''
+            Este metodo implementa a acao de aumentar o tamanho do item grafico barra
+        '''
         for item in self.selectedItems():
             if isinstance(item, Node):
                 item.prepareGeometryChange()
                 item.setRect(item.rect().x(), item.rect().y(), item.rect().width(), item.rect().height()*1.25)
     
     def decreaseBus(self):
+        '''
+            Este metodo implementa a acao de aumentar o tamanho do item grafico barra
+        '''
         for item in self.selectedItems():
             if isinstance(item, Node):
                 item.prepareGeometryChange()
