@@ -197,7 +197,24 @@ class Ui_MainWindow(object):
         self.actionGrid.setIcon(icon)
         self.actionGrid.setObjectName("actionGrid")
         self.toolBar.addAction(self.actionGrid)
-
+        
+        # cria e configura acao de alinhar horizontalmente items no diagrama grafico
+        self.actionHalign = QtGui.QAction(MainWindow, triggered = self.sceneWidget.hAlign)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionGrid.setIcon(icon)
+        self.actionGrid.setObjectName("actionHalign")
+        self.toolBar.addAction(self.actionHalign)
+        
+        # cria e configura acao de alinhar verticalmente items no diagrama grafico
+        self.actionValign = QtGui.QAction(MainWindow, triggered = self.sceneWidget.vAlign)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionGrid.setIcon(icon)
+        self.actionGrid.setObjectName("actionValign")
+        self.toolBar.addAction(self.actionValign)
         
         # configuracoes adicionais
         self.retranslateUi(MainWindow)
@@ -279,6 +296,18 @@ class Ui_MainWindow(object):
         self.actionGrid.setToolTip(QtGui.QApplication.translate("MainWindow", "Grade", None, QtGui.QApplication.UnicodeUTF8))
         
         self.actionGrid.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, g", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionHalign.setText(QtGui.QApplication.translate("MainWindow", "Alinha Horizontalmente", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionHalign.setToolTip(QtGui.QApplication.translate("MainWindow", "Alinha Horizontalmente", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionHalign.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, h", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionValign.setText(QtGui.QApplication.translate("MainWindow", "Alinha Verticalmente", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionValign.setToolTip(QtGui.QApplication.translate("MainWindow", "Alinha Verticalmente", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionValign.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, h", None, QtGui.QApplication.UnicodeUTF8))
 
 
 class ControlMainWindow(QtGui.QMainWindow):

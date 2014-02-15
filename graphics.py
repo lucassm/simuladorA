@@ -5,6 +5,7 @@ from PySide import QtCore, QtGui
 import math
 import sys
 from DialogReligador import DialogReligador
+from time import sleep
 
 class Edge(QtGui.QGraphicsLineItem):
     '''
@@ -265,7 +266,8 @@ class Node(QtGui.QGraphicsRectItem):
         return QtGui.QGraphicsItem.itemChange(self, change, value)
     
     def mousePressEvent(self, mouseEvent):
-        self.setSelected(True)
+        
+        self.setSelected(True)        
         super(Node, self).mousePressEvent(mouseEvent)
         return
     
@@ -273,35 +275,39 @@ class Node(QtGui.QGraphicsRectItem):
             self.scene().clearSelection()
             self.setSelected(True)
             self.myNodeMenu.exec_(event.screenPos())
-            
-    def mouseMoveEvent(self, mouseEvent):
-        for item in self.scene().items():
-            if item != self and isinstance(item, Node):
-                if abs(item.x() - self.x()) <= 1.0:
-                    self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
-                    self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
-                    self.scene().addItem(self.alignLine)
-                
-                if abs(item.y() - self.y()) <= 1.0:
-                    self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
-                    self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
-                    self.scene().addItem(self.alignLine)
-                    
-            elif self.alignLine != None:
-                self.scene().removeItem(self.alignLine)
-                self.alignLine = None
-                    
-        super(Node, self).mouseMoveEvent(mouseEvent)
-        return
-    
-    def mouseReleaseEvent(self, mouseEvent):
         
-        if self.alignLine != None:
-            self.scene().removeItem(self.alignLine)
-            self.alignLine = None
-            
-        super(Node, self).mouseReleaseEvent(mouseEvent)
-        return
+#     def mouseMoveEvent(self, mouseEvent):
+#         
+#         if self.alignedX:
+#                 if abs(self.scenePos().x() - mouseEvent.scenePos().x()) <= 10.0:
+#                     self.setX(100.0)
+#                     print 'posicao x setada para: ', self.x()
+#                 else:
+#                     pass
+#                     #self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
+#                     
+#         for item in self.scene().items():
+#             if item != self and isinstance(item, Node):
+#                 if  self.x() == item.x() and not self.alignedX:
+#                     self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
+#                     self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+#                     self.scene().addItem(self.alignLine)
+#                     
+#                     self.posAlignX = self.x()
+#                     self.alignedX = True
+#                     self.posSceneAlign = self.scenePos()
+#                 if abs(item.y() - self.y()) <= 1.0:
+#                     self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
+#                     self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+#                     self.scene().addItem(self.alignLine)
+#                     
+#             elif self.alignLine != None:
+#                 self.scene().removeItem(self.alignLine)
+#                 self.alignLine = None
+#                     
+#         super(Node, self).mouseMoveEvent(mouseEvent)
+#         return
+#     
         
 class SceneWidget(QtGui.QGraphicsScene):
     '''
@@ -321,10 +327,10 @@ class SceneWidget(QtGui.QGraphicsScene):
         
         self.setSceneRect(0, 0, 800, 800)
         
-        #self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
-        
         self.myMode = self.MoveItem
         self.myItemType = Node.Subestacao
+        
+        self.keyControlIsPressed = False
         
         self.line = None
         self.textItem = None
@@ -429,6 +435,32 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.itemInserted.emit(3)
         super(SceneWidget, self).mouseReleaseEvent(mouseEvent)
     
+    def keyPressEvent(self, event):
+        key = event.key()
+        
+        if key == QtCore.Qt.Key_Up:
+            for item in self.selectedItems():
+                item.moveBy(0, -10)
+        elif key == QtCore.Qt.Key_Down:
+            for item in self.selectedItems():
+                item.moveBy(0, 10)
+        elif key == QtCore.Qt.Key_Left:
+            for item in self.selectedItems():
+                item.moveBy(-10, 0)
+        elif key == QtCore.Qt.Key_Right:
+            for item in self.selectedItems():
+                item.moveBy(10, 0)
+        elif key == QtCore.Qt.Key_Space or key == QtCore.Qt.Key_Enter:
+            pass
+        elif key == QtCore.Qt.Key_Control:
+            self.keyControlIsPressed = True
+            print 'Ctrl pressed'
+        elif key == QtCore.Qt.Key_Delete:
+            self.deleteItem()
+        else:
+            super(SceneWidget, self).keyPressEvent(self, event)
+        return
+    
     def setItemType(self, type):
         '''
             Define em qual tipo de item sera inserido no diagrama grafico assim que um evento
@@ -509,8 +541,38 @@ class SceneWidget(QtGui.QGraphicsScene):
             if isinstance(item, Node):
                 item.prepareGeometryChange()
                 item.setRect(item.rect().x(), item.rect().y(), item.rect().width(), item.rect().height()*0.75)
-        
     
+    def hAlign(self):
+        yPosList = []
+        for item in self.selectedItems():
+            print 'pos', item.pos()
+            print 'scene pos', item.pos()
+            if isinstance(item, Node):
+                yPosList.append(item.pos().y())
+        maxPos = max(yPosList)
+        minPos = min(yPosList)
+        meanPos = maxPos - abs(maxPos - minPos)/2.0
+        
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                item.setY(meanPos)
+                
+    def vAlign(self):
+        xPosList = []
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                xPosList.append(item.scenePos().x())
+        maxPos = max(xPosList)
+        minPos = min(xPosList)
+        meanPos = max + abs(maxPos - minPos)/2.0
+        
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                pos = item.mapToScene(meanPos, item.scenePos().y())
+                item.setPos(pos)
+    
+    def setGrid(self):
+        self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
             
 class ViewWidget(QtGui.QGraphicsView):
     '''
