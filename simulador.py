@@ -190,7 +190,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionExit)
         
         # cria e configura acao de inserir ou retirar grade no diagrama grafico
-        self.actionGrid = QtGui.QAction(MainWindow)
+        self.actionGrid = QtGui.QAction(MainWindow, triggered = self.sceneWidget.setGrid)
         
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)

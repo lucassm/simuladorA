@@ -318,6 +318,8 @@ class SceneWidget(QtGui.QGraphicsScene):
     # tipos de modos de iteracao com o diagrama grafico
     InsertItem, InsertLine, InsertText, MoveItem  = range(4)
     
+    # tipos de estilos para o background do diagrama grafico
+    GridStyle, NoStyle = range(2) 
     # signal definido para a classe SceneWidget enviado quando um item é inserido no diagrama grafico
     itemInserted = QtCore.Signal(int)
     
@@ -329,6 +331,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         
         self.myMode = self.MoveItem
         self.myItemType = Node.Subestacao
+        
+        self.myBackgroundSytle = self.NoStyle
         
         self.keyControlIsPressed = False
         
@@ -561,19 +565,22 @@ class SceneWidget(QtGui.QGraphicsScene):
         xPosList = []
         for item in self.selectedItems():
             if isinstance(item, Node):
-                xPosList.append(item.scenePos().x())
+                xPosList.append(item.pos().x())
         maxPos = max(xPosList)
         minPos = min(xPosList)
-        meanPos = max + abs(maxPos - minPos)/2.0
+        meanPos = maxPos - abs(maxPos - minPos)/2.0
         
         for item in self.selectedItems():
             if isinstance(item, Node):
-                pos = item.mapToScene(meanPos, item.scenePos().y())
-                item.setPos(pos)
+                item.setX(meanPos)
     
     def setGrid(self):
-        self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
-            
+        if self.myBackgroundSytle == self.GridStyle:
+            self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.white, QtCore.Qt.NoBrush))
+            self.myBackgroundSytle = self.NoStyle
+        elif self.myBackgroundSytle == self.NoStyle:
+            self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
+            self.myBackgroundSytle = self.GridStyle
 class ViewWidget(QtGui.QGraphicsView):
     '''
         Esta classe implementa o container QGraphicsView
