@@ -20,8 +20,8 @@ class Edge(QtGui.QGraphicsLineItem):
         super(Edge, self).__init__()
         
         self.w1 = w1
-        self.w1.addEdge(self) # adiciona o objeto Edge a lista de Edges do objeto w1
         self.w2 = w2
+        self.w1.addEdge(self) # adiciona o objeto Edge a lista de Edges do objeto w1
         self.w2.addEdge(self) # adiciona o objeto Edge a lista de Edges do objeto w2
         
         self.myEdgeMenu = edgeMenu
@@ -60,10 +60,10 @@ class Edge(QtGui.QGraphicsLineItem):
         p1 = self.line().p1()  # ponto inicial do objeto QtCore.QLineF associado ao objeto QtGui.QGraphicsLine
         p2 = self.line().p2()  # ponto final do objeto QtCore.QLineF associado ao objeto QtGui.QGraphicsLine
         
-        return QtCore.QRectF(p1,                                        # topleft associada ao objeto QRectF 
+        return QtCore.QRectF(p1,                                    # topleft associada ao objeto QRectF 
                                     QtCore.QSizeF(p2.x() - p1.x(),  # comprimento no eixo x associado ao objeto QtCore.QSizeF
                                                   p2.y() - p1.y()   # comprimento no eixo y associado ao objeto QtCore.QSizeF
-                                                  )                     # size associado ao objeto QRectF
+                                                  )                 # size associado ao objeto QRectF
                                  ).normalized().adjusted(-extra, -extra, extra, extra)
 
     def paint(self, painter, option, widget):
@@ -74,16 +74,22 @@ class Edge(QtGui.QGraphicsLineItem):
         if (self.w1.collidesWithItem(self.w2)):
             return
         
-        w1 = self.w1
-        w2 = self.w2
         
-        line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
+        if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao:
+            if len(self.w1.edges) > 1:
+                line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)) , self.mapFromItem(self.w2, self.w2.rect().center()))
+            else:
+                line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
+        elif self.w2.myItemType == Node.Barra and self.w1.myItemType != Node.Subestacao:
+            if len(self.w2.edges) > 1:
+                line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)))
+            else:
+                line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
+        else:
+            line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
+                
+        #line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
         
-        p1 = w2.rect().topLeft() + w1.pos()
-        
-        intersectPoint = QtCore.QPointF()
-        
-            
         self.setLine(line)
         
         painter.setPen(QtGui.QPen(QtCore.Qt.black,  # QPen Brush
@@ -143,46 +149,46 @@ class Node(QtGui.QGraphicsRectItem):
     # tipos de itens possiveis
     Subestacao, Religador, Barra, Agent = range(4)
     
-    def __init__(self, nodeType, nodeMenu, parent=None, scene=None):
+    def __init__(self, itemType, nodeMenu, parent=None, scene=None):
     
         '''
             Metodo inicial da classe Node
-            Recebe como parâmetros os objetos nodeType que define o tipo de Node desejado e x, y a posicao do objeto Node
+            Recebe como parâmetros os objetos myItemType que define o tipo de Node desejado e x, y a posicao do objeto Node
             Define o objeto QtCore.QRectF que define o retangulo que representa o objeto QtGui.QGraphicsRectItem
         '''
         super(Node, self).__init__()
         
-        self.edges = []
+        self.edges = {}
+        self.edges_no_sub = {}
         
-        self.nodeType = nodeType
+        self.myItemType = itemType
         
         # caso o item a ser inserido seja do tipo subestacao
-        if self.nodeType == self.Subestacao:
+        if self.myItemType == self.Subestacao:
             rect = QtCore.QRectF(0, 0, 50.0, 50.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Subestacao', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo religador
-        elif self.nodeType == self.Religador:
+        elif self.myItemType == self.Religador:
             rect = QtCore.QRectF(0, 0, 50.0, 50.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Religador', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo barra
-        elif self.nodeType == self.Barra:
+        elif self.myItemType == self.Barra:
             rect = QtCore.QRectF(0, 0, 10.0, 100.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Barra', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo agent
-        elif self.nodeType == self.Agent:
+        elif self.myItemType == self.Agent:
             rect = QtCore.QRectF(0, 0, 50.0, 50.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Agente', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         
         self.setRect(rect)
-        self.alignLine = None
         self.myNodeMenu = nodeMenu
         
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
@@ -190,29 +196,44 @@ class Node(QtGui.QGraphicsRectItem):
         self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
         self.setZValue(0)
     
-    def removeEdge(self, edge):
-        '''
-            Metodo de remocao de objetos edge associados ao objeto node
-        '''
-        try:
-            self.edges.remove(edge)
-        except ValueError:
-            pass
- 
     def removeEdges(self):
         '''
-            Metodo de remocao de todos bjetos edge associados ao objeto node
+            Metodo de remocao de todos objetos edge associados ao objeto node
         '''
-        for edge in self.edges[:]:
-            edge.w1.removeEdge(edge)
-            edge.w2.removeEdge(edge)
+        for edge in self.edges:
             self.scene().removeItem(edge)
+        
+        self.edges.clear()
+        self.edges_no_sub.clear()
  
     def addEdge(self, edge):
         '''
             Metodo de adicao de objetos edge associados ao objeto node
         '''
-        self.edges.append(edge)
+        self.edges[edge] = len(self.edges)
+        
+        if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
+            self.edges_no_sub[edge] = len(self.edges_no_sub)
+    
+    def edgePosition(self, edge):
+        
+        height = self.rect().height()
+        print 'bus width', height
+        height = height - 2.0 * height/8.0
+        
+        numEdges = len(self.edges_no_sub)
+                
+        numEdges -= 1
+        
+        dw = height/float(numEdges)
+        
+        pos = height/8.0 + self.edges_no_sub[edge]*dw
+        
+        print 'espaco entre bus', dw
+        print 'id da edge: ', self.edges_no_sub[edge]
+        print 'pos da linha', pos
+        return pos
+            
     
     def boundingRect(self):
         '''
@@ -220,7 +241,7 @@ class Node(QtGui.QGraphicsRectItem):
         '''
         extra = 5.0
         return self.rect().adjusted(-extra, -extra, extra, extra)
-        
+    
     def paint(self, painter, option, widget):
         '''
             Metodo de desenho do objeto node implementado pela classe Node
@@ -229,22 +250,22 @@ class Node(QtGui.QGraphicsRectItem):
         self.text.setPos(0, self.rect().height())
         
         # caso o item a ser inserido seja do tipo subestacao
-        if self.nodeType == self.Subestacao:
+        if self.myItemType == self.Subestacao:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
             painter.drawEllipse(self.rect())
         # caso o item a ser inserido seja do tipo religador
-        elif self.nodeType == self.Religador:
+        elif self.myItemType == self.Religador:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
             painter.drawRect(self.rect())
         # caso o item a ser inserido seja do tipo barra
-        elif self.nodeType == self.Barra:
+        elif self.myItemType == self.Barra:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.black)
             painter.drawRect(self.rect())
         # caso o item a ser inserido seja do tipo agent
-        elif self.nodeType == self.Agent:
+        elif self.myItemType == self.Agent:
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
             painter.drawRect(self.rect())
@@ -254,7 +275,7 @@ class Node(QtGui.QGraphicsRectItem):
             painter.setBrush(QtCore.Qt.NoBrush)
             adjust = 2
             rect = self.rect().adjusted(-adjust, -adjust, adjust, adjust)
-            painter.drawRect(rect)              
+            painter.drawRect(rect)   
                     
     def itemChange(self, change, value):
         '''
@@ -275,39 +296,6 @@ class Node(QtGui.QGraphicsRectItem):
             self.scene().clearSelection()
             self.setSelected(True)
             self.myNodeMenu.exec_(event.screenPos())
-        
-#     def mouseMoveEvent(self, mouseEvent):
-#         
-#         if self.alignedX:
-#                 if abs(self.scenePos().x() - mouseEvent.scenePos().x()) <= 10.0:
-#                     self.setX(100.0)
-#                     print 'posicao x setada para: ', self.x()
-#                 else:
-#                     pass
-#                     #self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
-#                     
-#         for item in self.scene().items():
-#             if item != self and isinstance(item, Node):
-#                 if  self.x() == item.x() and not self.alignedX:
-#                     self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
-#                     self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
-#                     self.scene().addItem(self.alignLine)
-#                     
-#                     self.posAlignX = self.x()
-#                     self.alignedX = True
-#                     self.posSceneAlign = self.scenePos()
-#                 if abs(item.y() - self.y()) <= 1.0:
-#                     self.alignLine = QtGui.QGraphicsLineItem(item.x(), item.y(), self.x(), self.y())
-#                     self.alignLine.setPen(QtGui.QPen(QtCore.Qt.green, 2, QtCore.Qt.DashDotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
-#                     self.scene().addItem(self.alignLine)
-#                     
-#             elif self.alignLine != None:
-#                 self.scene().removeItem(self.alignLine)
-#                 self.alignLine = None
-#                     
-#         super(Node, self).mouseMoveEvent(mouseEvent)
-#         return
-#     
         
 class SceneWidget(QtGui.QGraphicsScene):
     '''
@@ -430,8 +418,6 @@ class SceneWidget(QtGui.QGraphicsScene):
                 endItem = endItems[0]
                 edge = Edge(startItem, endItem, self.myLineMenu)
                 edge.setColor(QtCore.Qt.black)
-                startItem.addEdge(edge)
-                endItem.addEdge(edge)
                 self.addItem(edge)
                 edge.updatePosition()
                                                                                                           
@@ -462,7 +448,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         elif key == QtCore.Qt.Key_Delete:
             self.deleteItem()
         else:
-            super(SceneWidget, self).keyPressEvent(self, event)
+            pass
+            #super(SceneWidget, self).keyPressEvent(self, event)
         return
     
     def setItemType(self, type):
