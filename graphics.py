@@ -497,7 +497,7 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.increaseBusAction = QtGui.QAction('Aumentar Barra', self, shortcut = 'Ctrl + a',triggered = self.increaseBus)
         self.decreaseBusAction = QtGui.QAction('Diminuir Barra', self, shortcut = 'Ctrl + d', triggered = self.decreaseBus)
         self.alignHLineAction = QtGui.QAction('Alinha Linha H', self, shortcut = 'Ctrl + h',triggered = self.alignLineH)
-        self.alignVLineAction = QtGui.QAction('Alinhar Linha V', self, shortcut = 'Ctrl + v', triggered = self)
+        self.alignVLineAction = QtGui.QAction('Alinhar Linha V', self, shortcut = 'Ctrl + v', triggered = self.alignLineV)
     
     def createMenus(self):
         '''
@@ -561,6 +561,12 @@ class SceneWidget(QtGui.QGraphicsScene):
             if isinstance(item, Edge):
                 posY = item.w1.y()
                 item.w2.setY(posY)
+    
+    def alignLineV(self):
+        for item in self.selectedItems():
+            if isinstance(item, Edge):
+                posX = item.w1.x()
+                item.w2.setX(posX)
     
     def hAlign(self):
         yPosList = []
