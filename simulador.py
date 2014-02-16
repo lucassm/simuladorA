@@ -216,6 +216,15 @@ class Ui_MainWindow(object):
         self.actionGrid.setObjectName("actionValign")
         self.toolBar.addAction(self.actionValign)
         
+        # cria e configura acao de selecionar items no diagrama grafico
+        self.actionSelect= QtGui.QAction(MainWindow, triggered = self.setSelect)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSelect.setIcon(icon)
+        self.actionSelect.setObjectName("actionSelect")
+        self.toolBar.addAction(self.actionSelect)
+        
         # configuracoes adicionais
         self.retranslateUi(MainWindow)
         self.toolBox.setCurrentIndex(0)
@@ -230,6 +239,17 @@ class Ui_MainWindow(object):
         #self.sceneWidget.setMode(self.sceneWidget.MoveItem)
         pass
     
+    def setSelect(self):
+        '''
+            Callback chamada no momento em que se faz necessario
+            alterar do modo de selecao para movimentacao de items
+            no diagrama grafico ou vice-versa
+        '''
+        if self.sceneWidget.myMode == self.sceneWidget.SelectItems:
+            self.sceneWidget.setMode(self.sceneWidget.MoveItem)
+        else:
+            self.sceneWidget.setMode(self.sceneWidget.SelectItems)
+        
     def buttonGroupClicked(self, id):
         '''
             Callback chamada no momento em que um botao de insersao
@@ -308,6 +328,12 @@ class Ui_MainWindow(object):
         self.actionValign.setToolTip(QtGui.QApplication.translate("MainWindow", "Alinha Verticalmente", None, QtGui.QApplication.UnicodeUTF8))
         
         self.actionValign.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, h", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionSelect.setText(QtGui.QApplication.translate("MainWindow", "Selecionar Items", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionSelect.setToolTip(QtGui.QApplication.translate("MainWindow", "Selecionar Items", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionSelect.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, e", None, QtGui.QApplication.UnicodeUTF8))
 
 
 class ControlMainWindow(QtGui.QMainWindow):

@@ -304,7 +304,7 @@ class SceneWidget(QtGui.QGraphicsScene):
     '''
     
     # tipos de modos de iteracao com o diagrama grafico
-    InsertItem, InsertLine, InsertText, MoveItem  = range(4)
+    InsertItem, InsertLine, InsertText, MoveItem, SelectItems  = range(5)
     
     # tipos de estilos para o background do diagrama grafico
     GridStyle, NoStyle = range(2) 
@@ -325,6 +325,7 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.keyControlIsPressed = False
         
         self.line = None
+        self.selectRect = None
         self.textItem = None
         
         self.createActions()
@@ -376,7 +377,16 @@ class SceneWidget(QtGui.QGraphicsScene):
             textItem.setDefaultTextColor(self.myTextColor)
             textItem.setPos(mouseEvent.scenePos())
             self.textInserted.emit(textItem)
-
+        elif self.myMode == self.SelectItems:
+            selection = True
+            for item in self.items():
+                if item.isUnderMouse():
+                    selection = False
+            if selection:
+                initPoint = mouseEvent.scenePos()
+                self.selectRect = QtGui.QGraphicsRectItem(QtCore.QRectF(initPoint, initPoint))
+                self.selectRect.setPen(QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.DashLine))
+                self.addItem(self.selectRect)
         super(SceneWidget, self).mousePressEvent(mouseEvent)
 
         return
@@ -392,6 +402,9 @@ class SceneWidget(QtGui.QGraphicsScene):
             self.line.setLine(newLine)
         elif self.myMode == self.MoveItem:
             super(SceneWidget, self).mouseMoveEvent(mouseEvent)
+        elif self.myMode == self.SelectItems and self.selectRect:
+            newRect = QtCore.QRectF(self.selectRect.rect().topLeft(), mouseEvent.scenePos())
+            self.selectRect.setRect(newRect)
     
     def mouseReleaseEvent(self, mouseEvent):
         '''
@@ -399,7 +412,7 @@ class SceneWidget(QtGui.QGraphicsScene):
             e detectado no diagrama grafico. Neste caso conecta os dois elementos que estão ligado
             pela linha criada no evento mousePress
         '''
-        if self.line and self.myMode == self.InsertLine:
+        if self.myMode == self.InsertLine and self.line:
             startItems = self.items(self.line.line().p1())
             if len(startItems) and startItems[0] == self.line:
                 startItems.pop(0)
@@ -420,6 +433,12 @@ class SceneWidget(QtGui.QGraphicsScene):
                 edge.setColor(QtCore.Qt.black)
                 self.addItem(edge)
                 edge.updatePosition()
+        elif self.myMode == self.SelectItems and self.selectRect:
+            path = QtGui.QPainterPath()
+            path.addRect(self.selectRect.rect())
+            self.setSelectionArea(path)
+            self.removeItem(self.selectRect)
+            self.selectRect = None
                                                                                                           
         self.line = None
         self.itemInserted.emit(3)
