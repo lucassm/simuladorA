@@ -449,16 +449,16 @@ class SceneWidget(QtGui.QGraphicsScene):
         
         if key == QtCore.Qt.Key_Up:
             for item in self.selectedItems():
-                item.moveBy(0, -10)
+                item.moveBy(0, -5)
         elif key == QtCore.Qt.Key_Down:
             for item in self.selectedItems():
-                item.moveBy(0, 10)
+                item.moveBy(0, 5)
         elif key == QtCore.Qt.Key_Left:
             for item in self.selectedItems():
-                item.moveBy(-10, 0)
+                item.moveBy(-5, 0)
         elif key == QtCore.Qt.Key_Right:
             for item in self.selectedItems():
-                item.moveBy(10, 0)
+                item.moveBy(5, 0)
         elif key == QtCore.Qt.Key_Space or key == QtCore.Qt.Key_Enter:
             pass
         elif key == QtCore.Qt.Key_Control:
@@ -496,6 +496,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.deleteAction = QtGui.QAction('Excluir Item', self, shortcut = 'Delete', triggered = self.deleteItem)
         self.increaseBusAction = QtGui.QAction('Aumentar Barra', self, shortcut = 'Ctrl + a',triggered = self.increaseBus)
         self.decreaseBusAction = QtGui.QAction('Diminuir Barra', self, shortcut = 'Ctrl + d', triggered = self.decreaseBus)
+        self.alignHLineAction = QtGui.QAction('Alinha Linha H', self, shortcut = 'Ctrl + h',triggered = self.alignLineH)
+        self.alignVLineAction = QtGui.QAction('Alinhar Linha V', self, shortcut = 'Ctrl + v', triggered = self)
     
     def createMenus(self):
         '''
@@ -516,6 +518,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.mySubstationMenu.addAction(self.deleteAction)
         
         self.myLineMenu = QtGui.QMenu('Menu Linha')
+        self.myLineMenu.addAction(self.alignHLineAction)
+        self.myLineMenu.addAction(self.alignVLineAction)
         self.myLineMenu.addAction(self.propertysAction)
         self.myLineMenu.addAction(self.deleteAction)
     
@@ -551,6 +555,12 @@ class SceneWidget(QtGui.QGraphicsScene):
             if isinstance(item, Node):
                 item.prepareGeometryChange()
                 item.setRect(item.rect().x(), item.rect().y(), item.rect().width(), item.rect().height()*0.75)
+    
+    def alignLineH(self):
+        for item in self.selectedItems():
+            if isinstance(item, Edge):
+                posY = item.w1.y()
+                item.w2.setY(posY)
     
     def hAlign(self):
         yPosList = []
