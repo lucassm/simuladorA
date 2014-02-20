@@ -74,17 +74,36 @@ class Edge(QtGui.QGraphicsLineItem):
         if (self.w1.collidesWithItem(self.w2)):
             return
         
+        # Esta é a logica de distribuicao e alinhamento das linhas conectadas ao item grafico Barra
         
+        # Se o item self.w1 for do tipo barra deve-se alinhar o item self.w2
         if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao:
+            # se o numero de linhas conectas a barra for maior que 1 devese proceder a logica de distribuicao e alinhamento
             if len(self.w1.edges) > 1:
+                # insere a linha em seu local de distribuicao calculado pelo item grafico barr
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)) , self.mapFromItem(self.w2, self.w2.rect().center()))
+                # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
+                self.w2.prepareGeometryChange()
+                self.w2.setY(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)).y() - 25.0)
+                self.scene().update(0,0,800,800)
+            # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
+        
+        # Se o item self.w2 for do tipo barra deve-se alinhar o item self.w1
         elif self.w2.myItemType == Node.Barra and self.w1.myItemType != Node.Subestacao:
+            # se o numero de linhas conectas a barra for maior que 1 devese proceder a logica de distribuicao e alinhamento
             if len(self.w2.edges) > 1:
+                # insere a linha em seu local de distribuicao calculado pelo item grafico barra
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)))
+                # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
+                self.w2.prepareGeometryChange()
+                self.w1.setY(self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)).y() - 25.0)
+                self.scene().update(0,0,800,800)
+            # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
+        # se nenhum dos items for do tipo Barra então os items são apenas conectados
         else:
             line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
                 
