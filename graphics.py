@@ -5,7 +5,6 @@ from PySide import QtCore, QtGui
 import math
 import sys
 from DialogReligador import DialogReligador
-from time import sleep
 
 class Edge(QtGui.QGraphicsLineItem):
     '''
@@ -56,7 +55,7 @@ class Edge(QtGui.QGraphicsLineItem):
         '''
             Metodo de definicao da borda do objeto edge implementado pela classe Edge
         '''
-        extra = (self.pen().width() + 10) / 2.0
+        extra = (self.pen().width() + 10)
         p1 = self.line().p1()  # ponto inicial do objeto QtCore.QLineF associado ao objeto QtGui.QGraphicsLine
         p2 = self.line().p2()  # ponto final do objeto QtCore.QLineF associado ao objeto QtGui.QGraphicsLine
         
@@ -75,17 +74,15 @@ class Edge(QtGui.QGraphicsLineItem):
             return
         
         # Esta é a logica de distribuicao e alinhamento das linhas conectadas ao item grafico Barra
-        
+
         # Se o item self.w1 for do tipo barra deve-se alinhar o item self.w2
         if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao:
-            # se o numero de linhas conectas a barra for maior que 1 devese proceder a logica de distribuicao e alinhamento
+            # se o numero de linhas conectas a barra for maior que 1 deve-se proceder a logica de distribuicao e alinhamento
             if len(self.w1.edges) > 1:
-                # insere a linha em seu local de distribuicao calculado pelo item grafico barr
+                # insere a linha em seu local de distribuicao calculado pelo item grafico barra
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)) , self.mapFromItem(self.w2, self.w2.rect().center()))
                 # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
-                self.w2.prepareGeometryChange()
                 self.w2.setY(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)).y() - 25.0)
-                self.scene().update(0,0,800,800)
             # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
@@ -97,9 +94,7 @@ class Edge(QtGui.QGraphicsLineItem):
                 # insere a linha em seu local de distribuicao calculado pelo item grafico barra
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)))
                 # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
-                self.w2.prepareGeometryChange()
                 self.w1.setY(self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)).y() - 25.0)
-                self.scene().update(0,0,800,800)
             # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
@@ -145,11 +140,19 @@ class Text(QtGui.QGraphicsTextItem):
         Classe que implementa o objeto Text Generico
     '''
     
+    selectedChange = QtCore.Signal(QtGui.QGraphicsItem)
+    lostFocus = QtCore.Signal(QtGui.QGraphicsTextItem)
+    
     def __init__(self, text, parent=None, scene=None):
         
-        super(Text, self).__init__(text, parent, scene)
+        super(Text, self).__init__(parent, scene)
+        self.setPlainText(text)
+        self.setZValue(100)
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
+        self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextEditorInteraction)
+        #self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        #self.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard)
     
     def mouseDoubleClickEvent(self, event):
         '''
@@ -159,6 +162,16 @@ class Text(QtGui.QGraphicsTextItem):
         if self.textInteractionFlags() == QtCore.Qt.NoTextInteraction:
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
         super(Text, self).mouseDoubleClickEvent(event)
+        
+    def itemChange(self, change, value):
+        if change == QtGui.QGraphicsItem.ItemSelectedChange:
+            self.selectedChange.emit(self)
+        return value
+    
+    def focusOutEvent(self, event):
+        #self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+        self.lostFocus.emit(self)
+        super(Text, self).focusOutEvent(event)
 
 class Node(QtGui.QGraphicsRectItem):
     '''
@@ -176,6 +189,8 @@ class Node(QtGui.QGraphicsRectItem):
             Define o objeto QtCore.QRectF que define o retangulo que representa o objeto QtGui.QGraphicsRectItem
         '''
         super(Node, self).__init__()
+        
+        self.id = id(self)
         
         self.edges = {}
         self.edges_no_sub = {}
@@ -237,7 +252,6 @@ class Node(QtGui.QGraphicsRectItem):
     def edgePosition(self, edge):
         
         height = self.rect().height()
-        print 'bus width', height
         height = height - 2.0 * height/8.0
         
         numEdges = len(self.edges_no_sub)
@@ -248,9 +262,6 @@ class Node(QtGui.QGraphicsRectItem):
         
         pos = height/8.0 + self.edges_no_sub[edge]*dw
         
-        print 'espaco entre bus', dw
-        print 'id da edge: ', self.edges_no_sub[edge]
-        print 'pos da linha', pos
         return pos
             
     
@@ -266,7 +277,7 @@ class Node(QtGui.QGraphicsRectItem):
             Metodo de desenho do objeto node implementado pela classe Node
         '''
         
-        self.text.setPos(0, self.rect().height())
+        #self.text.setPos(0, self.rect().height())
         
         # caso o item a ser inserido seja do tipo subestacao
         if self.myItemType == self.Subestacao:
@@ -452,6 +463,8 @@ class SceneWidget(QtGui.QGraphicsScene):
                 edge.setColor(QtCore.Qt.black)
                 self.addItem(edge)
                 edge.updatePosition()
+                self.update(0,0,800,800)
+                
         elif self.myMode == self.SelectItems and self.selectRect:
             path = QtGui.QPainterPath()
             path.addRect(self.selectRect.rect())
@@ -462,33 +475,34 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.line = None
         self.itemInserted.emit(3)
         super(SceneWidget, self).mouseReleaseEvent(mouseEvent)
-    
-    def keyPressEvent(self, event):
-        key = event.key()
-        
-        if key == QtCore.Qt.Key_Up:
-            for item in self.selectedItems():
-                item.moveBy(0, -5)
-        elif key == QtCore.Qt.Key_Down:
-            for item in self.selectedItems():
-                item.moveBy(0, 5)
-        elif key == QtCore.Qt.Key_Left:
-            for item in self.selectedItems():
-                item.moveBy(-5, 0)
-        elif key == QtCore.Qt.Key_Right:
-            for item in self.selectedItems():
-                item.moveBy(5, 0)
-        elif key == QtCore.Qt.Key_Space or key == QtCore.Qt.Key_Enter:
-            pass
-        elif key == QtCore.Qt.Key_Control:
-            self.keyControlIsPressed = True
-            print 'Ctrl pressed'
-        elif key == QtCore.Qt.Key_Delete:
-            self.deleteItem()
-        else:
-            pass
-            #super(SceneWidget, self).keyPressEvent(self, event)
-        return
+
+#     Problema quando tenta-se modificar o texto dos componentes
+#     def keyPressEvent(self, event):
+#         key = event.key()
+#         
+#         if key == QtCore.Qt.Key_Up:
+#             for item in self.selectedItems():
+#                 item.moveBy(0, -5)
+#         elif key == QtCore.Qt.Key_Down:
+#             for item in self.selectedItems():
+#                 item.moveBy(0, 5)
+#         elif key == QtCore.Qt.Key_Left:
+#             for item in self.selectedItems():
+#                 item.moveBy(-5, 0)
+#         elif key == QtCore.Qt.Key_Right:
+#             for item in self.selectedItems():
+#                 item.moveBy(5, 0)
+#         elif key == QtCore.Qt.Key_Space or key == QtCore.Qt.Key_Enter:
+#             pass
+#         elif key == QtCore.Qt.Key_Control:
+#             self.keyControlIsPressed = True
+#             print 'Ctrl pressed'
+#         elif key == QtCore.Qt.Key_Delete:
+#             self.deleteItem()
+#         else:
+#             pass
+#             #super(SceneWidget, self).keyPressEvent(self, event)
+#         return
     
     def setItemType(self, type):
         '''
@@ -622,6 +636,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         elif self.myBackgroundSytle == self.NoStyle:
             self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
             self.myBackgroundSytle = self.GridStyle
+
+
 class ViewWidget(QtGui.QGraphicsView):
     '''
         Esta classe implementa o container QGraphicsView

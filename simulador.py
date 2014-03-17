@@ -9,7 +9,10 @@
 
 from PySide import QtCore, QtGui
 from graphics import SceneWidget, ViewWidget
+from models import DiagramToXML
 import sys
+import os
+import models
 
 class Ui_MainWindow(object):
     '''
@@ -190,6 +193,24 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName("actionExit")
         self.toolBar.addAction(self.actionExit)
         
+        # cria e configura acao de salvar o estado atual do programa
+        self.actionSave = QtGui.QAction(MainWindow, triggered = self.save)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSave.setIcon(icon)
+        self.actionSave.setObjectName("actionSave")
+        self.toolBar.addAction(self.actionSave)
+        
+        # cria e configura acao de abrir um arquivo com uma configuração da rede montada anteriormente
+        self.actionOpen = QtGui.QAction(MainWindow, triggered = self.open)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionOpen.setIcon(icon)
+        self.actionOpen.setObjectName("actionOpen")
+        self.toolBar.addAction(self.actionOpen)
+        
         # cria e configura acao de inserir ou retirar grade no diagrama grafico
         self.actionGrid = QtGui.QAction(MainWindow, triggered = self.sceneWidget.setGrid)
         
@@ -239,6 +260,15 @@ class Ui_MainWindow(object):
         #self.buttonGroup.button(itemType).setChecked(False)
         #self.sceneWidget.setMode(self.sceneWidget.MoveItem)
         pass
+    
+    def save(self):
+        filename = QtGui.QFileDialog.getSaveFileName(None, 'Salvar Diagrama', os.getenv('HOME'))
+        file = models.DiagramToXML(self.sceneWidget)
+        file.writeXML(filename[0])
+    
+    def open(self):
+        filename = QtGui.QFileDialog.getOpenFileName(None, 'Abrir Diagrama', os.getenv('HOME'))
+        file = models.XMLToDiagram(self.sceneWidget, filename[0])
     
     def setSelect(self):
         '''
@@ -311,6 +341,18 @@ class Ui_MainWindow(object):
         self.actionExit.setToolTip(QtGui.QApplication.translate("MainWindow", "Sair", None, QtGui.QApplication.UnicodeUTF8))
         
         self.actionExit.setShortcut(QtGui.QApplication.translate("MainWindow", "4, Backspace", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionSave.setText(QtGui.QApplication.translate("MainWindow", "Salvar", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionSave.setToolTip(QtGui.QApplication.translate("MainWindow", "Salvar", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionSave.setShortcut(QtGui.QApplication.translate("MainWindow", "4, Ctrl + S", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionOpen.setText(QtGui.QApplication.translate("MainWindow", "Abrir", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionOpen.setToolTip(QtGui.QApplication.translate("MainWindow", "Abrir", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.actionOpen.setShortcut(QtGui.QApplication.translate("MainWindow", "4, Ctrl + A", None, QtGui.QApplication.UnicodeUTF8))
         
         self.actionGrid.setText(QtGui.QApplication.translate("MainWindow", "Grade", None, QtGui.QApplication.UnicodeUTF8))
         
