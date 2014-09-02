@@ -1,10 +1,8 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'simulador.ui'
-#
-# Created: Sun Jan 26 16:58:45 2014
-#      by: Lucas S Melo
+# Criado em: Sun Jan 26 16:58:45 2014
+#        por: Lucas S Melo
 #
 
 from PySide import QtCore, QtGui
