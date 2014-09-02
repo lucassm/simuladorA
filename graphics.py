@@ -4,7 +4,7 @@
 from PySide import QtCore, QtGui
 import math
 import sys
-from DialogReligador import DialogReligador
+#from RecloserDialog import RecloserDialog
 
 class Edge(QtGui.QGraphicsLineItem):
     '''
@@ -569,7 +569,7 @@ class SceneWidget(QtGui.QGraphicsScene):
         '''
             Este metodo inicia os dialogos de configuracao de cada um dos itens graficos do diagrama
         '''
-        dialog = DialogReligador()
+        dialog = RecloserDialog()
     
     def increaseBus(self, ):
         '''

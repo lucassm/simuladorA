@@ -14,7 +14,7 @@ import sys
 import os
 import models
 
-class Ui_MainWindow(object):
+class JanelaPrincipal(object):
     '''
         Esta classe implementa a inteface grafica do simulador
     '''
@@ -24,28 +24,29 @@ class Ui_MainWindow(object):
         #self.createActions()
         #self.createMenus()
     
-    def setupUi(self, MainWindow):
+    def inicializarComponentes(self, MainWindow):
         '''
             Este metodo implementa os componentes da inteface grafica
         '''
         
-        # objeto define a janela pricipal do aplicativo
-        MainWindow.setObjectName("MainWindow")
+        # define a janela pricipal do aplicativo
+        MainWindow.setObjectName('MainWindow')
+        MainWindow.setWindowIcon(QtGui.QIcon('icon.png'))
         MainWindow.resize(900, 700)
         
         # define o widget central do aplicativo
         self.centralwidget = QtGui.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setObjectName('centralwidget')
         
         # define o tipo de layout do widget central como gridLayout
         self.gridLayout = QtGui.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName("gridLayout")
+        self.gridLayout.setObjectName('gridLayout')
         
         # define a classe SceneWidget e ViewWidget como containers dos widgets
         self.sceneWidget = SceneWidget()
         self.graphicsView = ViewWidget(self.sceneWidget)
         self.graphicsView.setMinimumSize(QtCore.QSize(256, 0))
-        self.graphicsView.setObjectName("graphicsView")
+        self.graphicsView.setObjectName('graphicsView')
         
         # adiciona os sinais ao objeto sceneWidget
         self.sceneWidget.itemInserted.connect(self.itemInserted)
@@ -312,7 +313,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Simulador de Redes Elétricas de Distribuição", None, QtGui.QApplication.UnicodeUTF8))
         
         self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
         
@@ -382,8 +383,8 @@ class Ui_MainWindow(object):
 class ControlMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(ControlMainWindow, self).__init__(parent)
-        self.ui =  Ui_MainWindow()
-        self.ui.setupUi(self)
+        self.ui =  JanelaPrincipal()
+        self.ui.inicializarComponentes(self)
    
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
