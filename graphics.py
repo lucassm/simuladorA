@@ -133,8 +133,6 @@ class Edge(QtGui.QGraphicsLineItem):
         self.setSelected(True)
         self.myEdgeMenu.exec_(event.screenPos())
             
-
-
 class Text(QtGui.QGraphicsTextItem):
     '''
         Classe que implementa o objeto Text Generico
@@ -476,34 +474,33 @@ class SceneWidget(QtGui.QGraphicsScene):
         self.itemInserted.emit(3)
         super(SceneWidget, self).mouseReleaseEvent(mouseEvent)
 
-#     Problema quando tenta-se modificar o texto dos componentes
-#     def keyPressEvent(self, event):
-#         key = event.key()
-#         
-#         if key == QtCore.Qt.Key_Up:
-#             for item in self.selectedItems():
-#                 item.moveBy(0, -5)
-#         elif key == QtCore.Qt.Key_Down:
-#             for item in self.selectedItems():
-#                 item.moveBy(0, 5)
-#         elif key == QtCore.Qt.Key_Left:
-#             for item in self.selectedItems():
-#                 item.moveBy(-5, 0)
-#         elif key == QtCore.Qt.Key_Right:
-#             for item in self.selectedItems():
-#                 item.moveBy(5, 0)
-#         elif key == QtCore.Qt.Key_Space or key == QtCore.Qt.Key_Enter:
-#             pass
-#         elif key == QtCore.Qt.Key_Control:
-#             self.keyControlIsPressed = True
-#             print 'Ctrl pressed'
-#         elif key == QtCore.Qt.Key_Delete:
-#             self.deleteItem()
-#         else:
-#             pass
-#             #super(SceneWidget, self).keyPressEvent(self, event)
-#         return
-    
+        #     Problema quando tenta-se modificar o texto dos componentes
+        #     def keyPressEvent(self, event):
+        #         key = event.key()
+        #         
+        #         if key == QtCore.Qt.Key_Up:
+        #             for item in self.selectedItems():
+        #                 item.moveBy(0, -5)
+        #         elif key == QtCore.Qt.Key_Down:
+        #             for item in self.selectedItems():
+        #                 item.moveBy(0, 5)
+        #         elif key == QtCore.Qt.Key_Left:
+        #             for item in self.selectedItems():
+        #                 item.moveBy(-5, 0)
+        #         elif key == QtCore.Qt.Key_Right:
+        #             for item in self.selectedItems():
+        #                 item.moveBy(5, 0)
+        #         elif key == QtCore.Qt.Key_Space or key == QtCore.Qt.Key_Enter:
+        #             pass
+        #         elif key == QtCore.Qt.Key_Control:
+        #             self.keyControlIsPressed = True
+        #             print 'Ctrl pressed'
+        #         elif key == QtCore.Qt.Key_Delete:
+        #             self.deleteItem()
+        #         else:
+        #             pass
+        #             #super(SceneWidget, self).keyPressEvent(self, event)
+        #         return
     def setItemType(self, type):
         '''
             Define em qual tipo de item sera inserido no diagrama grafico assim que um evento
@@ -637,7 +634,6 @@ class SceneWidget(QtGui.QGraphicsScene):
             self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.lightGray, QtCore.Qt.CrossPattern))
             self.myBackgroundSytle = self.GridStyle
 
-
 class ViewWidget(QtGui.QGraphicsView):
     '''
         Esta classe implementa o container QGraphicsView
@@ -662,8 +658,6 @@ class ViewWidget(QtGui.QGraphicsView):
             return
 
         self.scale(scaleFactor, scaleFactor)
-
-
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

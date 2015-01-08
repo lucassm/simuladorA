@@ -377,7 +377,6 @@ class JanelaPrincipal(object):
         
         self.actionSelect.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl, e", None, QtGui.QApplication.UnicodeUTF8))
 
-
 class ControlMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(ControlMainWindow, self).__init__(parent)
