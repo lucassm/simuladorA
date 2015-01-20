@@ -5,6 +5,13 @@ Este é um projeto de simulador de sistemas de distribuição de energia elétri
 
 Inicialmente o simulador irá possuir as funcionalidades de desenho da rede e arquivamento das informações dos componentes da rede no formato xml e obdecendo as perdeterminações do padrão CIM (Common Information Model).
 
+
+## Dependências
+
+Este software tem como dependências o interpretador Python 2.7 e os seguintes pacotes:
+* PySide
+* Numpy
+
 ## Versão
 
 0.1
@@ -27,4 +34,7 @@ Essa versão do simulador tem simplesmente a funcionalidade de desenho dos compo
 * Criar o componente 'Nó de carga' que pode ser inserido separadamente no diagrama ou na linha que conecta dois religadores;
 * Salvar as informações de parâmetros dos componentes em xml utilizando o padrão CIM
 
-Essas funcionalidades estão previstas para a versão 0.2 do simulador.
+## Observações
+
+* As funcionalidades descritas aqui estão previstas para a versão 0.2 do simulador;
+* O nome do simulador ainda não está definido;
