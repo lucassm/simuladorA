@@ -84,19 +84,19 @@ class XMLToDiagram():
             if child.tag == 'node':
                 
                 if child.attrib['type'] == '0':
-                    item = Node(int(child.attrib['type']), None)
+                    item = Node(int(child.attrib['type']), self.scene.mySubstationMenu)
                     item.setPos(float(child.find('x').text), float(child.find('y').text))
                     item.id = int(child.find('id').text)
                     self.scene.addItem(item)
                     
                 elif child.attrib['type'] == '1':
-                    item = Node(int(child.attrib['type']), None)
+                    item = Node(int(child.attrib['type']), self.scene.myRecloserMenu)
                     item.setPos(float(child.find('x').text), float(child.find('y').text))
                     item.id = int(child.find('id').text)
                     self.scene.addItem(item)
                     
                 elif child.attrib['type'] == '2':
-                    item = Node(int(child.attrib['type']), None)
+                    item = Node(int(child.attrib['type']), self.scene.myBusMenu)
                     item.setPos(float(child.find('x').text), float(child.find('y').text))
                     item.id = int(child.find('id').text)
                     item.setRect(0, 0, float(child.find('width').text), float(child.find('height').text))
@@ -116,5 +116,5 @@ class XMLToDiagram():
                     elif isinstance(item, Node) and item.id == int(child.find('w2').text):
                         w2 = item
                 
-                edge = Edge(w1, w2, None)
+                edge = Edge(w1, w2,self.scene.myLineMenu)
                 self.scene.addItem(edge)

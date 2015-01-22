@@ -83,6 +83,7 @@ class Edge(QtGui.QGraphicsLineItem):
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)) , self.mapFromItem(self.w2, self.w2.rect().center()))
                 # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
                 self.w2.setY(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)).y() - 25.0)
+                self.w2.fixItem()
             # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
@@ -95,6 +96,7 @@ class Edge(QtGui.QGraphicsLineItem):
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)))
                 # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
                 self.w1.setY(self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)).y() - 25.0)
+                self.w1.fixItem()
             # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
@@ -194,6 +196,7 @@ class Node(QtGui.QGraphicsRectItem):
         self.edges_no_sub = {}
         
         self.myItemType = itemType
+        self.Fixed = False
         
         # caso o item a ser inserido seja do tipo subestacao
         if self.myItemType == self.Subestacao:
@@ -226,8 +229,12 @@ class Node(QtGui.QGraphicsRectItem):
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
+        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges,True)
         self.setZValue(0)
     
+    def fixItem(self):
+        self.Fixed = True
+
     def removeEdges(self):
         '''
             Metodo de remocao de todos objetos edge associados ao objeto node
@@ -600,19 +607,37 @@ class SceneWidget(QtGui.QGraphicsScene):
     
     def hAlign(self):
         yPosList = []
+        yCheckPosList=[]
+        done = 0
+        dif = 0
+
+
+
         for item in self.selectedItems():
-            print 'pos', item.pos()
-            print 'scene pos', item.pos()
+            #print 'pos', item.pos()
+            #print 'scene pos', item.pos()
             if isinstance(item, Node):
                 yPosList.append(item.pos().y())
         maxPos = max(yPosList)
         minPos = min(yPosList)
         meanPos = maxPos - abs(maxPos - minPos)/2.0
-        
+
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                if item.Fixed == True:
+                    meanPos = item.pos().y()
+
         for item in self.selectedItems():
             if isinstance(item, Node):
                 item.setY(meanPos)
-                
+                    
+
+        
+        #for item in self.selectedItems():
+        #    if isinstance(item, Node):
+        #        item.setY(meanPos) 
+
+
     def vAlign(self):
         xPosList = []
         for item in self.selectedItems():
