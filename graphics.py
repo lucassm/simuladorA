@@ -17,7 +17,7 @@ class Edge(QtGui.QGraphicsLineItem):
             Define o objeto QtCore.QLineF que define a linha que representa o objeto QtGui.QGraphicsLineItem
         '''
         super(Edge, self).__init__()
-        
+        self.isReading = False
         self.w1 = w1
         self.w2 = w2
         self.w1.addEdge(self) # adiciona o objeto Edge a lista de Edges do objeto w1
@@ -76,26 +76,26 @@ class Edge(QtGui.QGraphicsLineItem):
         # Esta é a logica de distribuicao e alinhamento das linhas conectadas ao item grafico Barra
 
         # Se o item self.w1 for do tipo barra deve-se alinhar o item self.w2
-        if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao:
+        if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao and self.isReading == False:
             # se o numero de linhas conectas a barra for maior que 1 deve-se proceder a logica de distribuicao e alinhamento
             if len(self.w1.edges) > 1:
                 # insere a linha em seu local de distribuicao calculado pelo item grafico barra
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)) , self.mapFromItem(self.w2, self.w2.rect().center()))
                 # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
-                self.w2.setY(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)).y() - 25.0)
+                self.w2.setY(self.mapFromItem(self.w1, self.w1.rect().center().x(), self.w1.edgePosition(self)).y() - 20.0)
                 self.w2.fixItem()
             # se não os items são apenas conectados
             else:
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
         
         # Se o item self.w2 for do tipo barra deve-se alinhar o item self.w1
-        elif self.w2.myItemType == Node.Barra and self.w1.myItemType != Node.Subestacao:
+        elif self.w2.myItemType == Node.Barra and self.w1.myItemType != Node.Subestacao and self.isReading == False:
             # se o numero de linhas conectas a barra for maior que 1 devese proceder a logica de distribuicao e alinhamento
             if len(self.w2.edges) > 1:
                 # insere a linha em seu local de distribuicao calculado pelo item grafico barra
                 line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)))
                 # alinha o item religador conectado ao item Barra com alinha que conecta esses dois items
-                self.w1.setY(self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)).y() - 25.0)
+                self.w1.setY(self.mapFromItem(self.w2, self.w2.rect().center().x(), self.w2.edgePosition(self)).y() - 20.0)
                 self.w1.fixItem()
             # se não os items são apenas conectados
             else:
@@ -206,7 +206,7 @@ class Node(QtGui.QGraphicsRectItem):
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
         # caso o item a ser inserido seja do tipo religador
         elif self.myItemType == self.Religador:
-            rect = QtCore.QRectF(0, 0, 50.0, 50.0)
+            rect = QtCore.QRectF(0, 0, 40.0, 40.0)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Religador', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
@@ -323,7 +323,10 @@ class Node(QtGui.QGraphicsRectItem):
     
     def mousePressEvent(self, mouseEvent):
         
-        self.setSelected(True)        
+        self.setSelected(True)
+        print self.id
+        print self.pos().x(),self.pos().y()     
+        print self.scenePos().x(),self.scenePos().y()   
         super(Node, self).mousePressEvent(mouseEvent)
         return
     
