@@ -30,9 +30,9 @@ Essa versão do simulador tem simplesmente a funcionalidade de desenho dos compo
 
 ## Funcionalidades a serem implementadas
 
-* Criar as janelas para inserir os parâmetros de cada componente;
-* Criar o componente 'Nó de carga' que pode ser inserido separadamente no diagrama ou na linha que conecta dois religadores;
-* Salvar as informações de parâmetros dos componentes em xml utilizando o padrão CIM
+- [ ] Criar as janelas para inserir os parâmetros de cada componente;
+- [ ] Criar o componente 'Nó de carga' que pode ser inserido separadamente no diagrama ou na linha que conecta dois religadores;
+- [ ] Salvar as informações de parâmetros dos componentes em xml utilizando o padrão CIM
 
 ## Observações
 
