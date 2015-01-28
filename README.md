@@ -22,11 +22,11 @@ Essa versão do simulador tem simplesmente a funcionalidade de desenho dos compo
 
 ## Bugs
 
-* Diagrama com erros ao abrir arquivo xml com informações da rede;
-* Os menus não abrem ao carregar o arquivo xml;
-* Erro no alinhamento dos componentes qundo um dos componentes está conectado a uma barra;
-* Dificuldades para selecionar as linhas que conectam um componente a outro;
-* O componente religador pode ter quantas conexões quanto queira, enquanto só deveriam ser permitidas duas conexões;
+- [x] Diagrama com erros ao abrir arquivo xml com informações da rede;
+- [x] Os menus não abrem ao carregar o arquivo xml;
+- [x] Erro no alinhamento dos componentes quando um dos componentes está conectado a uma barra;
+- [x] Dificuldades para selecionar as linhas que conectam um componente a outro;
+- [ ] O componente religador pode ter quantas conexões quanto queira, enquanto só deveriam ser permitidas duas conexões;
 
 ## Funcionalidades a serem implementadas
 
