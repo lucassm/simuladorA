@@ -327,6 +327,7 @@ class Node(QtGui.QGraphicsRectItem):
 		
 		self.edges = {}
 		self.edges_no_sub = {}
+		self.countEdge = 0
 		
 		self.myItemType = itemType
 		self.Fixed = False
@@ -382,11 +383,14 @@ class Node(QtGui.QGraphicsRectItem):
 		'''
 			Metodo de adicao de objetos edge associados ao objeto node
 		'''
+		if self.countEdge >=2:
+			return
 
 		self.edges[edge] = len(self.edges)
 		
 		if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
 			self.edges_no_sub[edge] = len(self.edges_no_sub)
+		self.countEdge = self.countEdge + 1
 	
 	def edgePosition(self, edge):
 		
