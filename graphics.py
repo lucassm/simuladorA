@@ -75,6 +75,8 @@ class Edge(QtGui.QGraphicsLineItem):
 
 		self.ghostRet = QtCore.QRectF()
 		self.ghostRetItem = ghostR(0,0,0,0,self,self.myEdgeMenu)
+		self.isFixed = False
+		self.fixFlag = False
 
 	
 	def updateRet(self):
@@ -131,22 +133,22 @@ class Edge(QtGui.QGraphicsLineItem):
 		# 	comp = deltaY-20
 		# 	xbase = xbase-100*deltaY/1000
 
-
+			
 
 
 		self.ghostRet.setRect(xbase+40,ybase+(deltaY/2)-5,comp,50)
 		# if (deltaX-40) < compmin:
 		# 	self.ghostRet.setRect(xbase+40,ybase+(deltaY/2)+10,deltaX-40,30)
 		# 	print "limite!"
-
-		print self.ghostRet.height()
-
+		if self.isFixed:
+			self.ghostRet.adjust(-20,-20,-20,-20)
+			print "uhuul"
 
 
 		x = self.ghostRet.center().x()
 		y = self.ghostRet.center().y()
 		
-
+		
 		self.ghostRetItem.setRect(self.ghostRet)
 		self.ghostRetItem.setTransform(QtGui.QTransform().translate(x,y).rotate(angle).translate(-x,-y))
 
@@ -198,18 +200,22 @@ class Edge(QtGui.QGraphicsLineItem):
 		rec.adjust(-extra, -extra, extra, extra)
 		return rec
 
+	def removeGhostRet(self):
+
+		self.scene().removeItem(self.ghostRetItem)
+
 	def paint(self, painter, option, widget):
 		'''
 			Metodo de desenho do objeto edge implementado pela classe Edge
 		'''
-		
 		if (self.w1.collidesWithItem(self.w2)):
 			return
 		
 		# Esta é a logica de distribuicao e alinhamento das linhas conectadas ao item grafico Barra
 
 		# Se o item self.w1 for do tipo barra deve-se alinhar o item self.w2
-		if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao and self.isReading == False:
+		if self.w1.myItemType == Node.Barra and self.w2.myItemType != Node.Subestacao:
+			self.fixFlag = True
 			# se o numero de linhas conectas a barra for maior que 1 deve-se proceder a logica de distribuicao e alinhamento
 			if len(self.w1.edges) > 1:
 				# insere a linha em seu local de distribuicao calculado pelo item grafico barra
@@ -222,7 +228,8 @@ class Edge(QtGui.QGraphicsLineItem):
 				line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
 		
 		# Se o item self.w2 for do tipo barra deve-se alinhar o item self.w1
-		elif self.w2.myItemType == Node.Barra and self.w1.myItemType != Node.Subestacao and self.isReading == False:
+		elif self.w2.myItemType == Node.Barra and self.w1.myItemType != Node.Subestacao:
+			self.fixFlag = True
 			# se o numero de linhas conectas a barra for maior que 1 devese proceder a logica de distribuicao e alinhamento
 			if len(self.w2.edges) > 1:
 				# insere a linha em seu local de distribuicao calculado pelo item grafico barra
@@ -240,7 +247,10 @@ class Edge(QtGui.QGraphicsLineItem):
 		#line = QtCore.QLineF(self.mapFromItem(self.w1, self.w1.rect().center()) , self.mapFromItem(self.w2, self.w2.rect().center()))
 		
 		self.setLine(line)
-		
+		if self.fixFlag:
+			self.isFixed = True
+			self.updateRet()
+			
 		painter.setPen(QtGui.QPen(QtCore.Qt.black,  # QPen Brush
 							   1,  # QPen width
 							   QtCore.Qt.SolidLine,  # QPen style
@@ -327,7 +337,6 @@ class Node(QtGui.QGraphicsRectItem):
 		
 		self.edges = {}
 		self.edges_no_sub = {}
-		self.countEdge = 0
 		
 		self.myItemType = itemType
 		self.Fixed = False
@@ -383,14 +392,10 @@ class Node(QtGui.QGraphicsRectItem):
 		'''
 			Metodo de adicao de objetos edge associados ao objeto node
 		'''
-		if self.countEdge >=2:
-			return
-
 		self.edges[edge] = len(self.edges)
 		
 		if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
 			self.edges_no_sub[edge] = len(self.edges_no_sub)
-		self.countEdge = self.countEdge + 1
 	
 	def edgePosition(self, edge):
 		
@@ -575,6 +580,9 @@ class SceneWidget(QtGui.QGraphicsScene):
 			for item in self.items():
 				if item.isUnderMouse():
 					selection = False
+					if isinstance(item,ghostR):
+						selection = True
+					
 			if selection:
 				initPoint = mouseEvent.scenePos()
 				self.selectRect = QtGui.QGraphicsRectItem(QtCore.QRectF(initPoint, initPoint))
@@ -725,9 +733,14 @@ class SceneWidget(QtGui.QGraphicsScene):
 			Este metodo implementa a acao de exclusão de um item grafico do diagrama
 		'''
 		for item in self.selectedItems():
+			if isinstance(item,Edge):
+				item.removeGhostRet()
+				self.removeItem(item)
+				return
 			if isinstance(item, Node):
-				item.removeEdges()
+				item.removeEdges()			
 			self.removeItem(item)
+
 	
 	def launchDialog(self):
 		'''

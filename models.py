@@ -124,3 +124,5 @@ class XMLToDiagram():
                 print w1.id,w2.id
                 edge = Edge(w1, w2,self.scene.myLineMenu)
                 self.scene.addItem(edge)
+                self.scene.addItem(edge.ghostRetItem)
+                #edge.updateRet()
