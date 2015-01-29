@@ -4,7 +4,7 @@
 from PySide import QtCore, QtGui
 import math
 import sys
-#from RecloserDialog import RecloserDialog
+from RecloserDialog import RecloserDialog
 
 class Edge(QtGui.QGraphicsLineItem):
     '''
