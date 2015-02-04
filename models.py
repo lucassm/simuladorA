@@ -58,7 +58,6 @@ class DiagramToXML(ElementTree.Element):
                 edge.append(w1)
                 edge.append(w2)
                 self.append(edge)
-                print str(item.w1.id), str(item.w2.id)
 
     def write_xml(self, path):
         '''
@@ -84,7 +83,6 @@ class XMLToDiagram():
 
         xml_tree = ElementTree.parse(self.file_path)
         xml_element = xml_tree.getroot()
-        print xml_element
         self.scene.clear()
         for child in xml_element:
 
@@ -129,11 +127,8 @@ class XMLToDiagram():
                 for item in self.scene.items():
                     if isinstance(item, Node) and item.id == int(child.find('w1').text):
                         w1 = item
-                        print item.id
                     elif isinstance(item, Node) and item.id == int(child.find('w2').text):
                         w2 = item
-                        print item.id
-
                 edge = Edge(w1, w2, self.scene.myLineMenu)
                 self.scene.addItem(edge)
                 self.scene.addItem(edge.GhostRetItem)

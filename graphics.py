@@ -101,8 +101,6 @@ class Edge(QtGui.QGraphicsLineItem):
         # newDeltaY = ytop - ybase
         # newDeltaX = xtop - xbase
         angle = math.degrees(math.atan2(delta_y, delta_x))
-        print delta_x
-        # print angle
         compfix = math.sqrt(math.pow(delta_x, 2) + math.pow(delta_y, 2))
         comp = delta_x - 40
         # larg = (delta_y / 2) - 5
@@ -356,6 +354,7 @@ class Node(QtGui.QGraphicsRectItem):
         self.edges_no_sub = {}
         self.myItemType = item_type
         self.Fixed = False
+        self.edge_counter = 0
         # caso o item a ser inserido seja do tipo subestacao
         if self.myItemType == self.Subestacao:
             rect = QtCore.QRectF(0, 0, 50.0, 50.0)
@@ -402,12 +401,16 @@ class Node(QtGui.QGraphicsRectItem):
             self.scene().removeItem(edge)
         self.edges.clear()
         self.edges_no_sub.clear()
+        self.edge_counter = 0
 
     def add_edge(self, edge):
         '''
             Metodo de adicao de objetos edge associados ao objeto node
         '''
+        if self.edge_counter > 2:
+            return
         self.edges[edge] = len(self.edges)
+        self.edge_counter += 1
 
         if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
             self.edges_no_sub[edge] = len(self.edges_no_sub)
@@ -480,9 +483,6 @@ class Node(QtGui.QGraphicsRectItem):
     def mousePressEvent(self, mouse_event):
 
         self.setSelected(True)
-        print self.id
-        print self.pos().x(), self.pos().y()
-        print self.scenePos().x(), self.scenePos().y()
         super(Node, self).mousePressEvent(mouse_event)
         return
 
@@ -605,6 +605,8 @@ class SceneWidget(QtGui.QGraphicsScene):
             mousePress.
         '''
         if self.myMode == self.InsertLine and self.line:
+            # self.line = None
+            # return
             start_items = self.items(self.line.line().p1())
             if len(start_items) and start_items[0] == self.line:
                 start_items.pop(0)
@@ -622,6 +624,10 @@ class SceneWidget(QtGui.QGraphicsScene):
                 start_item = start_items[0]
                 end_item = end_items[0]
                 edge = Edge(start_item, end_item, self.myLineMenu)
+                if edge.w1.edge_counter > 2 or edge.w2.edge_counter > 2:
+                    edge.w1.edge_counter -= 1
+                    edge.w2.edge_counter -= 1
+                    return
                 edge.set_color(QtCore.Qt.black)
                 self.addItem(edge)
                 edge.update_position()
@@ -793,8 +799,6 @@ class SceneWidget(QtGui.QGraphicsScene):
         # done = 0
         # dif = 0
         for item in self.selectedItems():
-            # print 'pos', item.pos()
-            # print 'scene pos', item.pos()
             if isinstance(item, Node):
                 y_pos_list.append(item.pos().y())
         max_pos = max(y_pos_list)
