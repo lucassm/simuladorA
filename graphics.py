@@ -4,7 +4,8 @@
 from PySide import QtCore, QtGui
 import math
 import sys
-from RecloserDialog import RecloserDialog
+
+from DialogReligador import RecloserDialog
 
 
 class GhostR(QtGui.QGraphicsRectItem):
