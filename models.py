@@ -3,6 +3,7 @@ from xml.etree import ElementTree
 from xml.dom import minidom
 from PySide import QtCore, QtGui
 from graphics import Node, Edge
+from bs4 import BeautifulSoup
 
 
 class DiagramToXML(ElementTree.Element):
@@ -71,6 +72,7 @@ class DiagramToXML(ElementTree.Element):
         f.close()
 
 
+
 class XMLToDiagram():
     '''
         Classe que realiza a conversão do arquivo XML com as informações do 
@@ -132,3 +134,63 @@ class XMLToDiagram():
                 edge = Edge(w1, w2, self.scene.myLineMenu)
                 self.scene.addItem(edge)
                 self.scene.addItem(edge.GhostRetItem)
+
+
+class CimXML():
+
+    '''Classe que representa os dados dos componentes em padrão CIM'''
+
+    def __init__(self, scene):
+        self.scene = scene
+
+        self.cim_xml = BeautifulSoup()
+        self.cim_xml.append(self.cim_xml.new_tag("Node"))
+        self.cim_xml.find('Node').append(self.cim_xml.new_tag("Breaker"))
+
+        for item in scene.items():
+            if isinstance(item, Node):
+
+                if item.myItemType == item.Religador:
+                    tag_id = self.cim_xml.new_tag(str(item.id))
+                    self.cim_xml.find("Breaker").append(tag_id)
+
+                    tag_rc = self.cim_xml.new_tag("ratedCurrent")
+                    tag_rc.append(str(item.chave.ratedCurrent))
+                    tag_id.append(tag_rc)
+
+                    tag_itt = self.cim_xml.new_tag("inTransitTime")
+                    tag_itt.append(str(item.chave.inTransitTime))
+                    tag_id.append(tag_itt)
+
+                    tag_bc = self.cim_xml.new_tag("breakingCapacity")
+                    tag_bc.append(str(item.chave.breakingCapacity))
+                    tag_id.append(tag_bc)
+
+                    tag_rs = self.cim_xml.new_tag("recloseSequences")
+                    tag_rs.append(str(item.chave.recloseSequences))
+                    tag_id.append(tag_rs)
+
+                    tag_state = self.cim_xml.new_tag("state")
+                    tag_state.append(str(item.chave.estado))
+                    tag_id.append(tag_state)
+
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("ratedCurrent"))
+
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("inTransitTime"))
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("breakingCapacity"))
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("recloseSequences"))
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("state"))
+
+    def write_xml(self, path):
+        '''
+            Função que cria o arquivo XML na localização indicada pelo
+            argumento path
+        '''
+        f = open(path, 'w')
+        f.write(self.cim_xml.prettify())
+        f.close()

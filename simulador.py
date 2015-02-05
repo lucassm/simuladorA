@@ -276,8 +276,12 @@ class JanelaPrincipal(object):
     def save(self):
         filename = QtGui.QFileDialog.getSaveFileName(
             None, 'Salvar Diagrama', os.getenv('HOME'))
+        print filename
         file = models.DiagramToXML(self.sceneWidget)
         file.write_xml(filename[0])
+
+        file2 = models.CimXML(self.sceneWidget)
+        file2.write_xml(filename[0] + '_CIM')
 
     def open(self):
         filename = QtGui.QFileDialog.getOpenFileName(

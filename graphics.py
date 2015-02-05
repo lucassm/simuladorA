@@ -4,6 +4,8 @@
 from PySide import QtCore, QtGui
 import math
 import sys
+from rede import Chave
+# import models
 
 from DialogReligador import RecloserDialog
 
@@ -365,6 +367,8 @@ class Node(QtGui.QGraphicsRectItem):
         # caso o item a ser inserido seja do tipo religador
         elif self.myItemType == self.Religador:
             rect = QtCore.QRectF(0, 0, 40.0, 40.0)
+            # Cria o objeto abstrato chave referente ao religador
+            self.chave = Chave('religador1', 400, 0.01, 1000, 3)
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Religador', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
@@ -414,8 +418,8 @@ class Node(QtGui.QGraphicsRectItem):
         if self.myItemType == self.Religador:
             if self.edge_counter > 2:
                 return
-            self.edges[edge] = len(self.edges)
             self.edge_counter += 1
+        self.edges[edge] = len(self.edges)
 
         if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
             self.edges_no_sub[edge] = len(self.edges_no_sub)
@@ -491,7 +495,6 @@ class Node(QtGui.QGraphicsRectItem):
         return QtGui.QGraphicsItem.itemChange(self, change, value)
 
     def mousePressEvent(self, mouse_event):
-
         self.setSelected(True)
         super(Node, self).mousePressEvent(mouse_event)
         return
@@ -505,7 +508,7 @@ class Node(QtGui.QGraphicsRectItem):
 class SceneWidget(QtGui.QGraphicsScene):
     '''
         Classe que implementa o container Grafico onde os
-        widgets residirao
+        widgets residirão
     '''
 
     # tipos de modos de iteracao com o diagrama grafico
@@ -522,7 +525,7 @@ class SceneWidget(QtGui.QGraphicsScene):
         super(SceneWidget, self).__init__()
         self.setSceneRect(0, 0, 800, 800)
         self.myMode = self.MoveItem
-        self.myItemType = None
+        self.myItemType = Node.Subestacao
         self.myBackgroundSytle = self.NoStyle
         self.keyControlIsPressed = False
         self.line = None
@@ -561,10 +564,9 @@ class SceneWidget(QtGui.QGraphicsScene):
                 if item.isUnderMouse():
                     if isinstance(item, GhostR):
 
-                        self.myItemType = Node.NoConectivo
                         c_pos = (
                             item.edge.line().p1() + item.edge.line().p2()) / 2
-                        self.no = Node(self.myItemType, None)
+                        self.no = Node(4, None)
                         self.addItem(self.no)
                         self.no.setPos(c_pos - QtCore.QPointF(3.5, 3.5))
                         item.no = self.no
