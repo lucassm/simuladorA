@@ -15,6 +15,7 @@ class GhostR(QtGui.QGraphicsRectItem):
         self.y = y
         self.w = w
         self.h = h
+        self.no = None
         self.edge = edge
         self.event = event
         self.setRect(x, y, w, h)
@@ -338,7 +339,7 @@ class Node(QtGui.QGraphicsRectItem):
        Classe que implementa o objeto Node Genérico.
     '''
     # tipos de itens possiveis
-    Subestacao, Religador, Barra, Agent = range(4)
+    Subestacao, Religador, Barra, Agent, NoConectivo = range(5)
 
     def __init__(self, item_type, node_menu, parent=None, scene=None):
         '''
@@ -379,6 +380,9 @@ class Node(QtGui.QGraphicsRectItem):
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Agente', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
+        # caso o item a ser inserido seja do tipo nó conectivo
+        elif self.myItemType == self.NoConectivo:
+            rect = QtCore.QRectF(0, 0, 7, 7)
 
         self.setRect(rect)
         self.myNodeMenu = node_menu
@@ -407,10 +411,11 @@ class Node(QtGui.QGraphicsRectItem):
         '''
             Metodo de adicao de objetos edge associados ao objeto node
         '''
-        if self.edge_counter > 2:
-            return
-        self.edges[edge] = len(self.edges)
-        self.edge_counter += 1
+        if self.myItemType == self.Religador:
+            if self.edge_counter > 2:
+                return
+            self.edges[edge] = len(self.edges)
+            self.edge_counter += 1
 
         if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
             self.edges_no_sub[edge] = len(self.edges_no_sub)
@@ -463,6 +468,11 @@ class Node(QtGui.QGraphicsRectItem):
             painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
             painter.setBrush(QtCore.Qt.white)
             painter.drawRect(self.rect())
+        # caso o item a ser inserido seja do tipo nó conectivo
+        elif self.myItemType == self.NoConectivo:
+            painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
+            painter.setBrush(QtCore.Qt.black)
+            painter.drawEllipse(self.rect())
 
         if self.isSelected():
             painter.setPen(QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.DashLine))
@@ -512,10 +522,12 @@ class SceneWidget(QtGui.QGraphicsScene):
         super(SceneWidget, self).__init__()
         self.setSceneRect(0, 0, 800, 800)
         self.myMode = self.MoveItem
-        self.myItemType = Node.Subestacao
+        self.myItemType = None
         self.myBackgroundSytle = self.NoStyle
         self.keyControlIsPressed = False
         self.line = None
+        self.no = None
+        self.ghost = None
         self.selectRect = None
         self.text_item = None
         self.create_actions()
@@ -544,11 +556,28 @@ class SceneWidget(QtGui.QGraphicsScene):
             self.itemInserted.emit(self.myItemType)
 
         elif self.myMode == self.InsertLine:
+            passe = False
+            for item in self.items():
+                if item.isUnderMouse():
+                    if isinstance(item, GhostR):
 
+                        self.myItemType = Node.NoConectivo
+                        c_pos = (
+                            item.edge.line().p1() + item.edge.line().p2()) / 2
+                        self.no = Node(self.myItemType, None)
+                        self.addItem(self.no)
+                        self.no.setPos(c_pos - QtCore.QPointF(3.5, 3.5))
+                        item.no = self.no
+                        self.ghost = item
+                        passe = True
+            if passe is True:
+                l0 = c_pos
+            else:
+                l0 = mouse_event.scenePos()
             self.line = QtGui.QGraphicsLineItem(
                 QtCore.QLineF(
-                    mouse_event.scenePos(),
-                    mouse_event.scenePos()))
+                    l0,
+                    l0))
             self.line.setPen(
                 QtGui.QPen(QtCore.Qt.black, 2))
             self.addItem(self.line)
@@ -607,6 +636,8 @@ class SceneWidget(QtGui.QGraphicsScene):
         if self.myMode == self.InsertLine and self.line:
             # self.line = None
             # return
+            inserted = False
+
             start_items = self.items(self.line.line().p1())
             if len(start_items) and start_items[0] == self.line:
                 start_items.pop(0)
@@ -630,10 +661,29 @@ class SceneWidget(QtGui.QGraphicsScene):
                     return
                 edge.set_color(QtCore.Qt.black)
                 self.addItem(edge)
+                inserted = True
                 edge.update_position()
                 self.addItem(edge.GhostRetItem)
                 edge.update_ret()
                 self.update(0, 0, 800, 800)
+            if inserted is False and self.no is not None:
+                self.removeItem(self.no)
+
+            if self.no is not None and inserted is True:
+                self.ghost.edge.w1.remove_edges()
+                new_edge_1 = Edge(self.ghost.edge.w1, self.no, self.myLineMenu)
+                new_edge_2 = Edge(self.no, self.ghost.edge.w2, self.myLineMenu)
+                self.addItem(new_edge_1)
+                self.addItem(new_edge_2)
+                self.addItem(new_edge_1.GhostRetItem)
+                self.addItem(new_edge_2.GhostRetItem)
+                new_edge_1.update_position()
+                new_edge_2.update_position()
+                new_edge_1.update_ret()
+                new_edge_2.update_ret()
+
+                
+            self.no = None
         elif self.myMode == self.SelectItems and self.selectRect:
             path = QtGui.QPainterPath()
             path.addRect(self.selectRect.rect())
