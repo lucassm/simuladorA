@@ -331,7 +331,7 @@ class JanelaPrincipal(object):
     def retranslateUi(self, main_window):
 
         main_window.setWindowTitle(QtGui.QApplication.translate(
-            "main_window", "Simulador de Redes Elétricas de Distribuição",
+            "main_window", "Smart Power v0.1 - Simulador de Redes Elétricas de Distribuição",
             None, QtGui.QApplication.UnicodeUTF8))
 
         self.toolBar.setWindowTitle(
