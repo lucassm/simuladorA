@@ -52,14 +52,14 @@ class GhostR(QtGui.QGraphicsRectItem):
         super(GhostR, self).mouseReleaseEvent(mouse_event)
     def paint(self, painter, option, widget):
 
-        painter.setPen(QtGui.QPen(QtCore.Qt.black,      # QPen Brush
+        painter.setPen(QtGui.QPen(QtCore.Qt.transparent,      # QPen Brush
                                   1,                    # QPen width
                                   QtCore.Qt.SolidLine,  # QPen style
                                   QtCore.Qt.SquareCap,  # QPen cap style
                                   QtCore.Qt.RoundJoin)  # QPen join style
                        )
         # painter.setBrush(QtCore.Qt.black)
-        painter.drawRect(self.edge.GhostRet)
+        painter.drawEllipse(self.edge.GhostRet)
 
 
 class Edge(QtGui.QGraphicsLineItem):
@@ -485,15 +485,20 @@ class Node(QtGui.QGraphicsRectItem):
             self.scene().removeItem(edge)
 
         for edge in deleted_list:
-            edge.w1.remove_edge(edge)
-            edge.w2.remove_edge(edge)
+            if edge.w1 is not None:
+                edge.w1.remove_edge(edge)
+            if edge.w2 is not None:
+                edge.w2.remove_edge(edge)
 
         self.edges.clear()
         self.edges_no_sub.clear()
         self.update_count()
 
     def remove_edge(self, edge):
+        scene = self.scene()
+        print scene
         self.edges.pop(edge)
+        scene.removeItem(edge)
         self.update_count()
 
     def add_edge(self, edge):
@@ -509,6 +514,7 @@ class Node(QtGui.QGraphicsRectItem):
         if edge.w1.myItemType != Node.Subestacao and edge.w2.myItemType != Node.Subestacao:
             self.edges_no_sub[edge] = len(self.edges_no_sub)
         self.update_count()
+
     def edge_position(self, edge):
 
         height = self.rect().height()
@@ -689,9 +695,13 @@ class SceneWidget(QtGui.QGraphicsScene):
         elif self.myMode == self.InsertLine:
             passe = False
             add = True
+            node_priority = False
+            for item in self.items(mouse_event.scenePos()):
+                if isinstance(item, Node):
+                    node_priority = True
             for item in self.items():
                 if item.isUnderMouse():
-                    if isinstance(item, GhostR):
+                    if isinstance(item, GhostR) and not node_priority:
 
                         c_pos = (
                             item.edge.line().p1() + item.edge.line().p2()) / 2
@@ -702,7 +712,7 @@ class SceneWidget(QtGui.QGraphicsScene):
                         self.ghost = item
                         # self.start_item_is_ghost = True
                         passe = True
-                    elif isinstance(item,Node) or isinstance(item, Edge):
+                    elif isinstance(item,Node) or isinstance(item, Edge) and node_priority:
                         add = False
             if passe is True:
                 self.l0 = c_pos
@@ -775,9 +785,9 @@ class SceneWidget(QtGui.QGraphicsScene):
             os dois elementos que estão ligados pela linha criada no evento
             mousePress.
         '''
+
         if self.myMode == self.InsertLine and self.line:
             self.removeItem(self.no)
-            inserted = False
             permit1 = True
             permit2 = True
             start_pop = None
@@ -845,8 +855,20 @@ class SceneWidget(QtGui.QGraphicsScene):
                     end_item = end_items[0]
 
             if start_item == end_item or start_item.scenePos() == end_item.scenePos():
-                self.removeItem(start_item)
-                self.removeItem(self.line)
+                if isinstance(start_item, Node):
+                    if start_item.myItemType != Node.NoConectivo:
+                        self.removeItem(self.line)
+                        self.line = None
+                        return
+                if isinstance(end_item, Node):
+                    if end_item.myItemType != Node.NoConectivo:
+                        self.removeItem(self.line)
+                        self.line = None
+                        return
+                if start_item.edge_counter == 0:
+                    self.removeItem(start_item)
+                if end_item.edge_counter == 0:
+                    self.removeItem(self.line)
                 self.line = None
                 return
 
@@ -855,6 +877,15 @@ class SceneWidget(QtGui.QGraphicsScene):
             self.line = None
 
             if isinstance(start_item, Node) or isinstance(end_item, Node):
+                if start_item.myItemType == Node.Barra or end_item.myItemType == Node.Barra:
+                    print "entrou"
+                    dist = math.sqrt(pow((start_item.scenePos().x() - end_item.scenePos().x()),2) + pow((start_item.scenePos().y() - end_item.scenePos().y()),2))
+                    if dist < 115:
+                        if start_item.myItemType == Node.NoConectivo:
+                            self.removeItem(start_item)
+                        if end_item.myItemType == Node.NoConectivo:
+                            self.removeItem(end_item)
+                        return
                 if  not isinstance(start_item, Edge) and start_item.myItemType == Node.Barra and end_item.myItemType == Node.NoConectivo:
                     pos = end_item.scenePos()
                     self.removeItem(end_item)
@@ -867,6 +898,7 @@ class SceneWidget(QtGui.QGraphicsScene):
                     start_item = Node(Node.Religador, self.myRecloserMenu)
                     self.addItem(start_item)
                     start_item.setPos(pos)
+
                 print "start e end"
                 print start_item.myItemType, end_item.myItemType
                 print "lens e lene"
@@ -897,21 +929,22 @@ class SceneWidget(QtGui.QGraphicsScene):
                 print "permitido"
                 edge = Edge(start_item, end_item, self.myLineMenu)
                 if edge.line().length() < 115:
-                    if start_item.edge_counter > 1 or start_item.myItemType == Node.Barra:
-
+                    
+                    if start_item.edge_counter > 1:
                         pass
-                    elif start_item.myItemType != Node.Religador:
+                    elif start_item.myItemType != Node.Religador and start_item.myItemType != Node.Subestacao:
                         print "remova!"
                         self.removeItem(start_item)
-                    start_item.edge_counter -= 1
-                    if end_item.edge_counter > 1 or end_item.myItemType == Node.Barra:
+                    else:
+                        start_item.remove_edge(edge)
+                    if end_item.edge_counter > 1:
                         pass
-
                     elif end_item.myItemType != Node.Religador:
                         print "remova"
                         print "cp 1"
                         self.removeItem(end_item)
-                    end_item.edge_counter -= 1
+                    else:
+                        end_item.remove_edge(edge)
                     return
                 else:
                     print "Edge:"
@@ -932,7 +965,6 @@ class SceneWidget(QtGui.QGraphicsScene):
 
             if self.start_item_is_ghost and not isinstance(start_item, GhostR):
                 self.break_edge(start_item)
-
 
             # Teste: Se a linha criada for muito
             # pequena, o programa retorna sem nenhuma
@@ -1118,7 +1150,6 @@ class SceneWidget(QtGui.QGraphicsScene):
                     item.w1.remove_edges()
                     self.removeItem(item.w1)
                 if item.w2.myItemType == Node.NoConectivo:
-                    
                     item.w2.remove_edges()
                     self.removeItem(item.w2)
                 self.removeItem(item.GhostRetItem)
