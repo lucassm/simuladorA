@@ -7,7 +7,8 @@ import sys
 from rede import Chave
 # import models
 
-from DialogReligador import RecloserDialog
+from DialogRecloser import RecloserDialog
+from DialogLine import LineDialog
 
 
 class GhostR(QtGui.QGraphicsRectItem):
@@ -83,6 +84,8 @@ class Edge(QtGui.QGraphicsLineItem):
 # objeto w2
 
         self.myEdgeMenu = edge_menu
+
+
 
         line = QtCore.QLineF(self.w1.pos(), self.w2.pos())
         self.setLine(line)
@@ -183,7 +186,7 @@ class Edge(QtGui.QGraphicsLineItem):
 
             
         self.GhostRet.setRect(xbase + 40, ybase + (delta_y / 2) - 5, comp, 50)
-        if self.w1.myItemType == 4 or self.w2.myItemType == 4:
+        if self.w1.myItemType == Node.NoConectivo or self.w2.myItemType == Node.NoConectivo:
             self.GhostRet.setRect(xbase + 40, ybase + (delta_y / 2) - 5, comp, 50)
         if self.isFixed:
             self.GhostRet.adjust(-20, -20, -20, -20)
@@ -197,12 +200,12 @@ class Edge(QtGui.QGraphicsLineItem):
                 QtGui.QTransform().translate(x, y).rotate(-angle).translate(
                     -x, -y))
         # if self.GhostRetItem.collidesWithItem(self.w1):
-        #     if self.w1.myItemType == 4:
+        #     if self.w1.myItemType == Node.NoConectivo:
         #         print "bateu no nó"
         #         self.GhostRetItem.setRect(self.GhostRetItem.rect().adjusted(-10,-10,-10,-10))
 
         # if self.GhostRetItem.collidesWithItem(self.w2):
-        #     if self.w2.myItemType == 4:
+        #     if self.w2.myItemType == Node.NoConectivo:
         #         print "bateu no nó"
         #         self.GhostRetItem.setRect(self.GhostRetItem.rect().adjusted(-10,-10,-10,-10))
 
@@ -412,7 +415,7 @@ class Node(QtGui.QGraphicsRectItem):
        Classe que implementa o objeto Node Genérico.
     '''
     # tipos de itens possiveis
-    Subestacao, Religador, Barra, Agent, NoConectivo = range(5)
+    Subestacao, Religador, Barra, Agent, NoDeCarga, NoConectivo = range(6)
 
     def __init__(self, item_type, node_menu, parent=None, scene=None):
         '''
@@ -440,7 +443,7 @@ class Node(QtGui.QGraphicsRectItem):
         elif self.myItemType == self.Religador:
             rect = QtCore.QRectF(0, 0, 40.0, 40.0)
             # Cria o objeto abstrato chave referente ao religador
-            self.chave = Chave('religador1', 400, 0.01, 1000, 3)
+            self.chave = Chave(str(self.id))
             # definine e ajusta a posicao do label do item grafico
             self.text = Text('Religador', self, self.scene())
             self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
@@ -459,6 +462,11 @@ class Node(QtGui.QGraphicsRectItem):
         # caso o item a ser inserido seja do tipo nó conectivo
         elif self.myItemType == self.NoConectivo:
             rect = QtCore.QRectF(0, 0, 7, 7)
+
+        elif self.myItemType == self.NoDeCarga:
+            rect = QtCore.QRectF(0, 0, 10, 10)
+            self.text = Text('Carga', self, self.scene())
+            self.text.setPos(self.mapFromItem(self.text, 0, rect.height()))
 
         self.setRect(rect)
         self.myNodeMenu = node_menu
@@ -569,6 +577,11 @@ class Node(QtGui.QGraphicsRectItem):
             painter.setBrush(QtCore.Qt.black)
             painter.drawEllipse(self.rect())
 
+        elif self.myItemType == self.NoDeCarga:
+            painter.setPen(QtGui.QPen(QtCore.Qt.black, 1.5))
+            painter.setBrush(QtCore.Qt.black)
+            painter.drawEllipse(self.rect())
+
         if self.isSelected():
             painter.setPen(QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.DashLine))
             painter.setBrush(QtCore.Qt.NoBrush)
@@ -586,7 +599,7 @@ class Node(QtGui.QGraphicsRectItem):
         return QtGui.QGraphicsItem.itemChange(self, change, value)
 
     def mousePressEvent(self, mouse_event):
-        print len(self.edges)
+        print "Id:", self.chave.nome, ",", "Corrente Nominal:", self.chave.ratedCurrent, ",", "Breaking Capacity:", self.chave.breakingCapacity, ",", "Seq de Religamento", self.chave.recloseSequences
         self.setSelected(True)
         super(Node, self).mousePressEvent(mouse_event)
         return
@@ -603,7 +616,7 @@ class Node(QtGui.QGraphicsRectItem):
                 new_obj = edge.w2
             if edge.w2 == self:
                 new_obj = edge.w1
-        if self.myItemType == 4:
+        if self.myItemType == Node.NoConectivo:
             for item in self.scene().items():
                 if isinstance(item, Node):
 
@@ -680,12 +693,13 @@ class SceneWidget(QtGui.QGraphicsScene):
         else:
             self.removeItem(item_oculto)
         if self.myMode == self.InsertItem:
-
             if self.myItemType == Node.Religador:
                 item = Node(self.myItemType, self.myRecloserMenu)
             elif self.myItemType == Node.Barra:
                 item = Node(self.myItemType, self.myBusMenu)
             elif self.myItemType == Node.Subestacao:
+                item = Node(self.myItemType, self.mySubstationMenu)
+            elif self.myItemType == Node.NoDeCarga:
                 item = Node(self.myItemType, self.mySubstationMenu)
 
             self.addItem(item)
@@ -705,7 +719,7 @@ class SceneWidget(QtGui.QGraphicsScene):
 
                         c_pos = (
                             item.edge.line().p1() + item.edge.line().p2()) / 2
-                        self.no = Node(4, self.myLineMenu)
+                        self.no = Node(Node.NoConectivo, self.myLineMenu)
                         self.addItem(self.no)
                         self.no.setPos(c_pos - QtCore.QPointF(3.5, 3.5))
                         item.no = self.no
@@ -718,7 +732,7 @@ class SceneWidget(QtGui.QGraphicsScene):
                 self.l0 = c_pos
             else:
                 self.l0 = mouse_event.scenePos()
-                self.no = Node(4, self.myLineMenu)
+                self.no = Node(Node.NoConectivo, self.myLineMenu)
                 if add is True:
                     self.addItem(self.no)
                 self.no.setPos(mouse_event.scenePos())
@@ -813,13 +827,13 @@ class SceneWidget(QtGui.QGraphicsScene):
             if len(start_items) == 0:
                 if isinstance(start_pop, GhostR) and start_pop is not None:
                     c_pos = (start_pop.edge.line().p1() + start_pop.edge.line().p2()) / 2
-                    start_item = Node(4, self.myLineMenu)
+                    start_item = Node(Node.NoConectivo, self.myLineMenu)
                     self.addItem(start_item)
                     start_item.setPos(c_pos)
                     self.start_item_is_ghost = True
                 else:
                     print "checkpoint 1"
-                    start_item = Node(4, self.myLineMenu)
+                    start_item = Node(Node.NoConectivo, self.myLineMenu)
                     self.addItem(start_item)
                     start_item.setPos(self.pressPos)
 
@@ -839,14 +853,14 @@ class SceneWidget(QtGui.QGraphicsScene):
 
 
             if len(end_items) == 0:
-                end_item = Node(4, self.myLineMenu)
+                end_item = Node(Node.NoConectivo, self.myLineMenu)
                 self.addItem(end_item)
                 end_item.setPos(mouse_event.scenePos())
 
             if len(end_items):
                 if isinstance(end_pop, GhostR):
                     c_pos = (end_pop.edge.line().p1() + end_pop.edge.line().p2()) / 2
-                    end_item = Node(4, self.myLineMenu)
+                    end_item = Node(Node.NoConectivo, self.myLineMenu)
                     self.addItem(end_item)
                     end_item.setPos(c_pos)
                     self.ghost = end_pop
@@ -914,11 +928,11 @@ class SceneWidget(QtGui.QGraphicsScene):
                 if not permit1:
                     print "permit 1 negado!"
                     if isinstance(start_item, Node):
-                        if start_item.myItemType == 4 and len(start_item.edges) == 0:
+                        if start_item.myItemType == Node.NoConectivo and len(start_item.edges) == 0:
                             self.removeItem(start_item)
                             print "checkpoint 1"
                     if isinstance(end_item, Node):
-                        if end_item.myItemType == 4 and len(end_item.edges) == 0:
+                        if end_item.myItemType == Node.NoConectivo and len(end_item.edges) == 0:
                             self.removeItem(end_item)
                             print "checkpoint 2"
 
@@ -958,7 +972,7 @@ class SceneWidget(QtGui.QGraphicsScene):
             else:
                 return
 
-            if edge.w1.myItemType == 4:
+            if edge.w1.myItemType == Node.NoConectivo:
                 aux = edge.w1
                 edge.w1 = edge.w2
                 edge.w2 = aux
@@ -994,7 +1008,7 @@ class SceneWidget(QtGui.QGraphicsScene):
             # if inserted is False and self.no is not None:
             #     self.break_edge()
             #     print "oi 1"
-            #     new_node = Node(4, self.myLineMenu)
+            #     new_node = Node(Node.NoConectivo, self.myLineMenu)
             #     self.addItem(new_node)
             #     new_node.setPos(mouse_event.scenePos())
             #     new_edge = Edge(self.no, new_node, self.myLineMenu)
@@ -1161,7 +1175,52 @@ class SceneWidget(QtGui.QGraphicsScene):
             Este método inicia os diálogos de configuração de cada um dos itens
             gráficos do diagrama.
         '''
-        dialog = RecloserDialog()
+        for item in self.selectedItems():
+            if isinstance(item, Node):
+                if item.myItemType == Node.Religador:
+                    dialog = RecloserDialog(item)
+                    print dialog.dialog.result()
+                    if dialog.dialog.result() == 1:
+                        if dialog.identificaOLineEdit.text() == "":
+                            pass
+                        else:
+                            item.chave.nome = dialog.identificaOLineEdit.text()
+                        if dialog.correnteNominalLineEdit.text() == "":
+                            pass
+                        else:
+                            item.chave.ratedCurrent = dialog.correnteNominalLineEdit.text()
+                        if dialog.capacidadeDeInterrupOLineEdit.text() == "":
+                            pass
+                        else:
+                            item.chave.breakingCapacity = dialog.capacidadeDeInterrupOLineEdit.text()
+                        if dialog.nDeSequNciasDeReligamentoLineEdit.text() == "":
+                            pass
+                        else:
+                            item.chave.recloseSequences = dialog.nDeSequNciasDeReligamentoLineEdit.text()
+                if item.myItemType == Node.Subestacao:
+                    return
+                    # dialog = SubstationDialog(item)
+
+            if isinstance(item, Edge):
+                dialog = LineDialog()
+                print dialog.dialog.result()
+                    # if dialog.dialog.result() == 1:
+                    #     if dialog.identificaOLineEdit.text() == "":
+                    #         pass
+                    #     else:
+                    #         item.chave.nome = dialog.identificaOLineEdit.text()
+                    #     if dialog.correnteNominalLineEdit.text() == "":
+                    #         pass
+                    #     else:
+                    #         item.chave.ratedCurrent = dialog.correnteNominalLineEdit.text()
+                    #     if dialog.capacidadeDeInterrupOLineEdit.text() == "":
+                    #         pass
+                    #     else:
+                    #         item.chave.breakingCapacity = dialog.capacidadeDeInterrupOLineEdit.text()
+                    #     if dialog.nDeSequNciasDeReligamentoLineEdit.text() == "":
+                    #         pass
+                    #     else:
+                    #         item.chave.recloseSequences = dialog.nDeSequNciasDeReligamentoLineEdit.text()
 
     def increase_bus(self, ):
         '''
