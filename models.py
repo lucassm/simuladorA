@@ -125,6 +125,22 @@ class XMLToDiagram():
                     item.id = int(child.find('id').text)
                     self.scene.addItem(item)
 
+                elif child.attrib['type'] == '4':
+                    item = Node(int(child.attrib['type']), None)
+                    item.setPos(
+                        float(child.find('x').text), float(
+                            child.find('y').text))
+                    item.id = int(child.find('id').text)
+                    self.scene.addItem(item)
+
+                elif child.attrib['type'] == '5':
+                    item = Node(int(child.attrib['type']), None)
+                    item.setPos(
+                        float(child.find('x').text), float(
+                            child.find('y').text))
+                    item.id = int(child.find('id').text)
+                    self.scene.addItem(item)
+
             elif child.tag == 'edge':
                 for item in self.scene.items():
                     if isinstance(item, Node) and item.id == int(child.find('w1').text):
