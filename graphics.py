@@ -528,7 +528,7 @@ class Node(QtGui.QGraphicsRectItem):
     def remove_edge(self, edge):
         scene = self.scene()
         self.edges.pop(edge)
-        scene.removeItem(edge)
+        # scene.removeItem(edge)
         self.update_count()
 
     def add_edge(self, edge):
@@ -553,6 +553,9 @@ class Node(QtGui.QGraphicsRectItem):
         num_edges = len(self.edges_no_sub)
 
         num_edges -= 1
+
+        if num_edges <= 0:
+            num_edges = 1
 
         dw = height / float(num_edges)
 
@@ -633,6 +636,8 @@ class Node(QtGui.QGraphicsRectItem):
     def mousePressEvent(self, mouse_event):
         # print "Id:", self.chave.nome, ",", "Corrente Nominal:", self.chave.ratedCurrent, ",", "Breaking Capacity:", self.chave.breakingCapacity, ",", "Seq de Religamento", self.chave.recloseSequences
         self.setSelected(True)
+        print "num_edges"
+        print len(self.edges)
         super(Node, self).mousePressEvent(mouse_event)
         return
 
@@ -669,6 +674,8 @@ class Node(QtGui.QGraphicsRectItem):
             for item in self.scene().items():
                 if isinstance(item, GhostR):
                     if self.collidesWithItem(item):
+                        if item.edge.line().length() < 130:
+                            return
                         pos = item.edge.get_fraction(mouse_event.scenePos())
                         self.setPos(pos.x()-5, pos.y()-5)
                         scene = self.scene()
@@ -850,11 +857,20 @@ class SceneWidget(QtGui.QGraphicsScene):
             start_pop = None
             end_pop = None
 
+            # Associa a start_items todos os itens que se encontram na posição
+            # inicial de aperto do mouse
             start_items = self.items(self.line.line().p1())
 
+            # Se há pelo menos um item nesta posição E o primeiro item da lista
+            # é a própria linha traçada ou um retângulo fantasma, retire este item
+            # da lista.
             if len(start_items) > 0 and (start_items[0] == self.line or isinstance(start_items[0], GhostR)):
                 start_pop = start_items.pop(0)
 
+            # Se há pelo menos dois itens nesta posição, testa-se: se o item é
+            # um retângulo fantasma, retira-o da lista, salvando-o na variável
+            # start_pop. Se o item for do tipo Edge, este também é retirado da
+            # lista, mas destruído.
             if len(start_items) > 1:
                 for item in start_items:
                     if isinstance(item, GhostR):
@@ -864,44 +880,86 @@ class SceneWidget(QtGui.QGraphicsScene):
                     if isinstance(item, Edge):
                         start_items.remove(item)
 
+            # Se na posição clicada não houver itens, testa-se: se o item salvo
+            # start_pop não for inexistente e for um retângulo fantasma, segue
+            # que o usuário está inserindo um nó conectivo entre dois extremos
+            # de uma linha. Este nó é então inserido na posição média entre os
+            # extremos e definido como start_item. A flag start_item_is_ghost 
+            # é então colocada como verdadeira. Caso contrário, o nó é inserido
+            # na posição em que o mouse foi apertado.
             if len(start_items) == 0:
                 if isinstance(start_pop, GhostR) and start_pop is not None:
                     c_pos = (start_pop.edge.line().p1() + start_pop.edge.line().p2()) / 2
                     start_item = Node(Node.NoConectivo, self.myLineMenu)
-                    self.addItem(start_item)
+                    # self.addItem(start_item)
                     start_item.setPos(c_pos)
                     self.start_item_is_ghost = True
+                    print "Connectivity Node Inserted in the middle of an Edge"
                 else:
                     start_item = Node(Node.NoConectivo, self.myLineMenu)
-                    self.addItem(start_item)
+                    # self.addItem(start_item)
                     start_item.setPos(self.pressPos)
+                    print "Connectivity Node inserted in a random position"
 
+            # Se após as remoções ainda houver pelo menos um item na posição,
+            # este tem que ser do tipo Node, e então o start_item é definido
+            # como este item.
             if len(start_items):
                 start_item = start_items[0]
+                print "First item is a Node"
 
+            # Procedimento semelhante é aplicado ao ponto final. Associa-se
+            # à lista end_items os itens que estão na posição no momento que
+            # o botão do mouse é solto.
             end_items = self.items(self.line.line().p2())
+            # Se há somente um item nesta lista e este é uma linha ou um
+            # retângulo fantasma, retira-se este item da lista.
             if len(end_items) and (end_items[0] == self.line or isinstance(end_items[0], GhostR)):
                 end_pop = end_items.pop(0)
 
+            # Na prática só é possível haver um item na posição final. Se este
+            # for um retângulo fantasma, este item é salvo em end_pop
             for item in end_items:
                 if isinstance(item, GhostR):
                     end_pop = item
 
+            # Se após a remoção não houver nenhum item restante, significa que
+            # a posição final ocorreu em um canto qualquer da tela. Ou seja, um
+            # nó conectivo é criado nesta posição
             if len(end_items) == 0:
                 end_item = Node(Node.NoConectivo, self.myLineMenu)
-                self.addItem(end_item)
+                # self.addItem(end_item)
                 end_item.setPos(mouse_event.scenePos())
+                print "Connectivity Node inserted in final position"
 
+            # Se restar um item na lista end_items, é feito um teste: se este
+            # item for um retângulo fantasma, significa que um nó será criado
+            # entre dois extremos de uma linha. Ou seja,um nó conectivo é
+            # criado no ponto médio destes extremos. Caso contrário, o end_item
+            # é definido como o Node final atingido.
             if len(end_items):
                 if isinstance(end_pop, GhostR):
                     c_pos = (end_pop.edge.line().p1() + end_pop.edge.line().p2()) / 2
                     end_item = Node(Node.NoConectivo, self.myLineMenu)
-                    self.addItem(end_item)
+                    # self.addItem(end_item)
                     end_item.setPos(c_pos)
                     self.ghost = end_pop
                     self.end_item_is_ghost = True
+                    print "Connectivity Node inserted on the middle of a final Edge"
                 else:
                     end_item = end_items[0]
+
+            # Caso, ao fim desta atribuição, o start_item e o end_item forem
+            # iguais, ou a posição de início e fim também o forem, a linha é
+            # removida. Se o start_item/end_item for um nó conectivo, é testado
+            # quantas ligações este possui, a fim de não comprometer o resto
+            # do diagrama. O start/end _item é removido se possuir 0 ligações.
+            # Caso o item não seja um nó conectivo, a linha é simplesmente
+            # removida e a função retorna.
+            print "start_pop"
+            print start_pop
+            print "end_pop"
+            print end_pop
 
             if start_item == end_item or start_item.scenePos() == end_item.scenePos():
                 if isinstance(start_item, Node):
@@ -919,81 +977,97 @@ class SceneWidget(QtGui.QGraphicsScene):
                 if end_item.edge_counter == 0:
                     self.removeItem(self.line)
                 self.line = None
+                print "Line not created: Same point or item"
                 return
-
-
+            # A linha parcial é removida.
             self.removeItem(self.line)
             self.line = None
+            print "start"
+            print start_item
+            print "end"
+            print end_item
 
-            if isinstance(start_item, Node) or isinstance(end_item, Node):
-                if start_item.myItemType == Node.Barra or end_item.myItemType == Node.Barra:
-                    dist = math.sqrt(pow((start_item.scenePos().x() - end_item.scenePos().x()),2) + pow((start_item.scenePos().y() - end_item.scenePos().y()),2))
-                    if dist < 115:
-                        if start_item.myItemType == Node.NoConectivo:
-                            self.removeItem(start_item)
-                        if end_item.myItemType == Node.NoConectivo:
-                            self.removeItem(end_item)
+            # >>>>>>>>>>>Testes referentes ao start_item e end_item<<<<<<<<<<<
+
+            # Se o start_item for do tipo Node, testa-se. Sendo um religador
+            # ou uma subestação, testa-se se ele já possui o número máximo
+            # de ligações (2). Se sim, retorna. Se não, testa-se se o end_item
+            # é um nó conectivo. Se sim, adiciona este nó definitivamente na
+            # cena. Obs: se o comprimento da ligação for curto demais, a linha
+            # não é criada.
+            if isinstance(start_item, Node):
+                dist = math.sqrt(
+                                pow(
+                                    (self.pressPos.x()
+                                        - end_item.scenePos().x()), 2)
+                                + pow(
+                                    (self.pressPos.y()
+                                     - end_item.scenePos().y()), 2))
+                if dist < 115:
+                    return
+                if start_item.myItemType == Node.Religador or start_item.myItemType == Node.Subestacao:
+                    if len(start_item.edges) > 1:
                         return
-                if  not isinstance(start_item, Edge) and start_item.myItemType == Node.Barra and end_item.myItemType == Node.NoConectivo:
-                    pos = end_item.scenePos()
-                    self.removeItem(end_item)
-                    end_item = Node(Node.Religador, self.myRecloserMenu)
+                    if end_item.myItemType == Node.NoConectivo:
+                        self.addItem(end_item)
+                    if end_item.myItemType == Node.Religador or end_item.myItemType == Node.Subestacao:
+                        if len(end_item.edges) > 1:
+                            return
+                # Se o start_item for um nó de carga, simplesmente adicione
+                # o end_item à cena
+                if start_item.myItemType == Node.NoDeCarga:
                     self.addItem(end_item)
-                    end_item.setPos(pos)
-                if end_item.myItemType == Node.Barra and start_item.myItemType == Node.NoConectivo:
-                    pos = start_item.scenePos()
-                    self.removeItem(start_item)
-                    start_item = Node(Node.Religador, self.myRecloserMenu)
-                    self.addItem(start_item)
-                    start_item.setPos(pos)
-                
-                start_item.update_count
-                end_item.update_count
-                if (start_item.edge_counter >= 2 and start_item.myItemType == Node.Religador):
-                    permit1 = False
-                if(end_item.edge_counter >= 2 and end_item.myItemType == Node.Religador):
-                    permit1 = False
-                if not permit1:
-                    if isinstance(start_item, Node):
-                        if start_item.myItemType == Node.NoConectivo and len(start_item.edges) == 0:
-                            self.removeItem(start_item)
-                    if isinstance(end_item, Node):
-                        if end_item.myItemType == Node.NoConectivo and len(end_item.edges) == 0:
-                            self.removeItem(end_item)
+
+                if start_item.myItemType == Node.Barra:
+                    if end_item.myItemType == Node.NoConectivo:
+                        end_item = Node(Node.Religador, self.myRecloserMenu)
+                        self.addItem(end_item)
+                        end_item.setPos(mouse_event.scenePos())
+                    #if end_item.myItemType == Node.Barra:
+                        
+
+                # Se o start_item for um nó conectivo, testa-se: se o end_item
+                # não for um nó conectivo, o start_item pode ser adicionado.
+                # É verificado então se o end_item é uma barra. Se for este
+                # o caso, é adicionado um religador automaticamente, no lugar
+                # do nó conectivo. Caso contrário, se o end_item for outro
+                # nó conectivo, os dois itens são adicionados à cena.
+                if start_item.myItemType == Node.NoConectivo:
+                    if end_item.myItemType != Node.NoConectivo:
+                        if end_item.myItemType == Node.Barra:
+                            start_item = Node(
+                                Node.Religador, self.myRecloserMenu)
+                            self.addItem(start_item)
+                            start_item.setPos(self.pressPos)
+                        if end_item.myItemType == Node.Religador or end_item.myItemType == Node.Subestacao:
+                            if len(end_item.edges) > 1:
+                                return
+                        self.addItem(start_item)
+                    else:
+                        self.addItem(start_item)
+                        self.addItem(end_item)
 
             # Criação da edge definitiva
-            if permit1:
-                edge = Edge(start_item, end_item, self.myLineMenu)
-                if edge.line().length() < 115:
-                    
-                    if start_item.edge_counter > 1:
-                        pass
-                    elif start_item.myItemType != Node.Religador and start_item.myItemType != Node.Subestacao:
-                        self.removeItem(start_item)
-                    else:
-                        start_item.remove_edge(edge)
-                    if end_item.edge_counter > 1:
-                        pass
-                    elif end_item.myItemType != Node.Religador:
-                        self.removeItem(end_item)
-                    else:
-                        end_item.remove_edge(edge)
-                    return
-                else:
-                    self.addItem(edge)
-                    edge.set_color(QtCore.Qt.black)
-                    self.addItem(edge.GhostRetItem)
-                    edge.update_position()
-            else:
-                return
+            edge = Edge(start_item, end_item, self.myLineMenu)
+            self.addItem(edge)
+            edge.set_color(QtCore.Qt.black)
+            self.addItem(edge.GhostRetItem)
+            edge.update_position()
 
             if edge.w1.myItemType == Node.NoConectivo:
                 aux = edge.w1
                 edge.w1 = edge.w2
                 edge.w2 = aux
 
-            if self.start_item_is_ghost and not isinstance(start_item, GhostR):
+            if self.start_item_is_ghost:
                 self.break_edge(start_item)
+                print "start is ghost, so break line"
+                print start_item
+                self.ghost = None
+            if self.end_item_is_ghost:
+                self.break_edge(end_item)
+                print "end is ghost, so break line"
+                self.ghost = None
 
             # Teste: Se a linha criada for muito
             # pequena, o programa retorna sem nenhuma
@@ -1079,7 +1153,9 @@ class SceneWidget(QtGui.QGraphicsScene):
         #             #super(SceneWidget, self).keyPressEvent(self, event)
         #         return
     def break_edge(self, end_newline):
+        print "remove fantasma"
         self.removeItem(self.ghost.edge.GhostRetItem)
+        print "remove linha"
         self.removeItem(self.ghost.edge)
         self.ghost.edge.w1.remove_edge(self.ghost.edge)
         self.ghost.edge.w2.remove_edge(self.ghost.edge)
@@ -1249,7 +1325,7 @@ class SceneWidget(QtGui.QGraphicsScene):
                     #     else:
                     #         item.chave.recloseSequences = dialog.nDeSequNciasDeReligamentoLineEdit.text()
 
-    def increase_bus(self, ):
+    def increase_bus(self):
         '''
             Este método implementa a açao de aumentar o tamanho do item gráfico
             barra.
