@@ -127,6 +127,9 @@ class JanelaPrincipal(object):
         self.lineButton = QtGui.QPushButton(self.page_1)
         self.lineButton.setObjectName("lineButton")
         self.lineButton.setCheckable(True)
+        self.noButton = QtGui.QPushButton(self.page_1)
+        self.noButton.setObjectName("noButton")
+        self.noButton.setCheckable(True)
 
         # define o grupo de botoes da pagina 1 do notebook
         self.buttonGroup = QtGui.QButtonGroup()
@@ -134,6 +137,7 @@ class JanelaPrincipal(object):
         self.buttonGroup.addButton(self.recloserButton, 1)
         self.buttonGroup.addButton(self.busButton, 2)
         self.buttonGroup.addButton(self.lineButton, 3)
+        self.buttonGroup.addButton(self.noButton, 4)
         self.buttonGroup.setExclusive(False)
 
         self.buttonGroup.buttonClicked[int].connect(self.buttonGroupClicked)
@@ -159,6 +163,11 @@ class JanelaPrincipal(object):
         self.lineLabel.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.lineLabel.setObjectName("lineLabel")
+        self.noLabel = QtGui.QLabel('')
+        self.noLabel.setAlignment(QtCore.Qt.AlignHCenter)
+        self.noLabel.setSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.noLabel.setObjectName("noLabel")
 
         # adiciona os botoes ao gridLayout_3
         self.gridlayout_page_1.addWidget(self.substationButton, 0, 0)
@@ -169,6 +178,8 @@ class JanelaPrincipal(object):
         self.gridlayout_page_1.addWidget(self.lineButton, 2, 1)
         self.gridlayout_page_1.addWidget(self.busLabel, 3, 0)
         self.gridlayout_page_1.addWidget(self.lineLabel, 3, 1)
+        self.gridlayout_page_1.addWidget(self.noButton, 4, 0)
+        self.gridlayout_page_1.addWidget(self.noLabel, 5, 0) 
 
         # adiciona o gridLayout_3 a pagina_1 do dockWidget
         self.page_1.setLayout(self.gridlayout_page_1)
@@ -276,8 +287,12 @@ class JanelaPrincipal(object):
     def save(self):
         filename = QtGui.QFileDialog.getSaveFileName(
             None, 'Salvar Diagrama', os.getenv('HOME'))
+        print filename
         file = models.DiagramToXML(self.sceneWidget)
         file.write_xml(filename[0])
+
+        file2 = models.CimXML(self.sceneWidget)
+        file2.write_xml(filename[0] + '_CIM')
 
     def open(self):
         filename = QtGui.QFileDialog.getOpenFileName(
@@ -327,7 +342,7 @@ class JanelaPrincipal(object):
     def retranslateUi(self, main_window):
 
         main_window.setWindowTitle(QtGui.QApplication.translate(
-            "main_window", "Simulador de Redes Elétricas de Distribuição",
+            "main_window", "Smart Power v0.1 - Simulador de Redes Elétricas de Distribuição",
             None, QtGui.QApplication.UnicodeUTF8))
 
         self.toolBar.setWindowTitle(
@@ -369,6 +384,14 @@ class JanelaPrincipal(object):
         self.lineLabel.setText(
             QtGui.QApplication.translate(
                 "main_window", "Linha", None, QtGui.QApplication.UnicodeUTF8))
+
+        self.noButton.setText(
+            QtGui.QApplication.translate(
+                "main_window", "Nó de Carga", None, QtGui.QApplication.UnicodeUTF8))
+
+        self.noLabel.setText(
+            QtGui.QApplication.translate(
+                "main_window", "Nó de Carga", None, QtGui.QApplication.UnicodeUTF8))
 
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_1),

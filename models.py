@@ -3,6 +3,7 @@ from xml.etree import ElementTree
 from xml.dom import minidom
 from PySide import QtCore, QtGui
 from graphics import Node, Edge
+from bs4 import BeautifulSoup
 
 
 class DiagramToXML(ElementTree.Element):
@@ -58,7 +59,6 @@ class DiagramToXML(ElementTree.Element):
                 edge.append(w1)
                 edge.append(w2)
                 self.append(edge)
-                print str(item.w1.id), str(item.w2.id)
 
     def write_xml(self, path):
         '''
@@ -70,6 +70,7 @@ class DiagramToXML(ElementTree.Element):
         f = open(path, 'w')
         f.write(dom_element.toprettyxml())
         f.close()
+
 
 
 class XMLToDiagram():
@@ -84,7 +85,6 @@ class XMLToDiagram():
 
         xml_tree = ElementTree.parse(self.file_path)
         xml_element = xml_tree.getroot()
-        print xml_element
         self.scene.clear()
         for child in xml_element:
 
@@ -125,15 +125,88 @@ class XMLToDiagram():
                     item.id = int(child.find('id').text)
                     self.scene.addItem(item)
 
+                elif child.attrib['type'] == '4':
+                    item = Node(int(child.attrib['type']), None)
+                    item.setPos(
+                        float(child.find('x').text), float(
+                            child.find('y').text))
+                    item.id = int(child.find('id').text)
+                    self.scene.addItem(item)
+
+                elif child.attrib['type'] == '5':
+                    item = Node(int(child.attrib['type']), None)
+                    item.setPos(
+                        float(child.find('x').text), float(
+                            child.find('y').text))
+                    item.id = int(child.find('id').text)
+                    self.scene.addItem(item)
+
             elif child.tag == 'edge':
                 for item in self.scene.items():
                     if isinstance(item, Node) and item.id == int(child.find('w1').text):
                         w1 = item
-                        print item.id
                     elif isinstance(item, Node) and item.id == int(child.find('w2').text):
                         w2 = item
-                        print item.id
-
                 edge = Edge(w1, w2, self.scene.myLineMenu)
                 self.scene.addItem(edge)
                 self.scene.addItem(edge.GhostRetItem)
+
+
+class CimXML():
+
+    '''Classe que representa os dados dos componentes em padrão CIM'''
+
+    def __init__(self, scene):
+        self.scene = scene
+
+        self.cim_xml = BeautifulSoup()
+        self.cim_xml.append(self.cim_xml.new_tag("Node"))
+        self.cim_xml.find('Node').append(self.cim_xml.new_tag("Breaker"))
+
+        for item in scene.items():
+            if isinstance(item, Node):
+
+                if item.myItemType == item.Religador:
+                    tag_id = self.cim_xml.new_tag(str(item.id))
+                    self.cim_xml.find("Breaker").append(tag_id)
+
+                    tag_rc = self.cim_xml.new_tag("ratedCurrent")
+                    tag_rc.append(str(item.chave.ratedCurrent))
+                    tag_id.append(tag_rc)
+
+                    tag_itt = self.cim_xml.new_tag("inTransitTime")
+                    tag_itt.append(str(item.chave.inTransitTime))
+                    tag_id.append(tag_itt)
+
+                    tag_bc = self.cim_xml.new_tag("breakingCapacity")
+                    tag_bc.append(str(item.chave.breakingCapacity))
+                    tag_id.append(tag_bc)
+
+                    tag_rs = self.cim_xml.new_tag("recloseSequences")
+                    tag_rs.append(str(item.chave.recloseSequences))
+                    tag_id.append(tag_rs)
+
+                    tag_state = self.cim_xml.new_tag("state")
+                    tag_state.append(str(item.chave.estado))
+                    tag_id.append(tag_state)
+
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("ratedCurrent"))
+
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("inTransitTime"))
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("breakingCapacity"))
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("recloseSequences"))
+
+                    # self.cim_xml.find(str(item.id)).append(self.cim_xml.new_tag("state"))
+
+    def write_xml(self, path):
+        '''
+            Função que cria o arquivo XML na localização indicada pelo
+            argumento path
+        '''
+        f = open(path, 'w')
+        f.write(self.cim_xml.prettify())
+        f.close()
