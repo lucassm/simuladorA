@@ -14,27 +14,39 @@ Este software tem como dependências o interpretador Python 2.7 e os seguintes p
 
 ## Versão
 
-0.1
+0.2
+
+## Como utilizar
+
+Em ambiente linux, com as dependências instaladas, vá até a pasta clonada deste repositório e execute o seguinte comando:
+
+$python simulador.py
 
 ## Funcionalidades
 
-Essa versão do simulador tem simplesmente a funcionalidade de desenho dos componentes da rede no diagrama gráfico
+Essa versão do simulador tem simplesmente a funcionalidade de desenho dos componentes da rede no diagrama gráfico, com os seguintes componentes:
+- Religador;
+- Barra;
+- Linha;
+- Nó de carga;
+
+Algumas funcionalidades são:
+- Alinhamento dos itens gráficos;
+- Salvar diagrama em arquivo do tipo xml;
+- Integração parcial com o padrão CIM;
 
 ## Bugs
 
-- [x] Diagrama com erros ao abrir arquivo xml com informações da rede;
-- [x] Os menus não abrem ao carregar o arquivo xml;
-- [x] Erro no alinhamento dos componentes quando um dos componentes está conectado a uma barra;
-- [x] Dificuldades para selecionar as linhas que conectam um componente a outro;
-- [ ] O componente religador pode ter quantas conexões quanto queira, enquanto só deveriam ser permitidas duas conexões;
+- [ ] Algoritmo de alimnhamento com erro quando a linha contém nós de carga;
+- [ ] Erros gráficos quando na inclusão dos nós de carga;
 
 ## Funcionalidades a serem implementadas
 
 - [ ] Criar as janelas para inserir os parâmetros de cada componente;
-- [ ] Criar o componente 'Nó de carga' que pode ser inserido separadamente no diagrama ou na linha que conecta dois religadores;
 - [ ] Salvar as informações de parâmetros dos componentes em xml utilizando o padrão CIM
+- [ ] Integrar a representação gráfica dos componentes com a estrutura de dados desenvolvida para representar a manipular a rede elétrica;
 
 ## Observações
 
-* As funcionalidades descritas aqui estão previstas para a versão 0.2 do simulador;
+* As funcionalidades descritas aqui estão previstas para a versão 0.3 do simulador;
 * O nome do simulador ainda não está definido;
